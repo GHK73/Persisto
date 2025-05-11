@@ -1,47 +1,19 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const dotenv = require('dotenv');
-dotenv.config();
-
+const express = require("express");
 const app = express();
-const PORT = process.env.PORT || 5500;
+const cors = require("cors");
+const { DBConnection } = require("./database/db");
+const User = require("./Models/User");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
+// Connect to the database
+DBConnection();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-mongoose.connect(process.env.MONGODB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-    .then(() => console.log("MongoDB connected"))
-    .catch(err => console.log("MongoDB connection error: ", err));
-
-const userSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-    phone_number: {
-        type: String,
-        required: true,
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-    },
-    password: {
-        type: String,
-        required: true,
-    },
-});
-
-const User = mongoose.model('User', userSchema);
+const PORT = process.env.PORT || 5500;
 
 app.post('/register', async (req, res) => {
     try {
@@ -82,6 +54,7 @@ app.post('/register', async (req, res) => {
     }
 });
 
+// Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
