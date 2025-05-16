@@ -1,0 +1,99 @@
+/* Container common for both signin/signup */
+.form-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Form box common styles */
+.form-box {
+  background: #fff;
+  padding: 32px 28px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+}
+
+/* Headings for forms */
+.form-box h2 {
+  font-weight: 700;
+  font-size: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+  color: #333;
+}
+
+/* Inputs for both forms */
+.form-box input {
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border: 1.8px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.form-box input:focus {
+  border-color: #6c63ff;
+  outline: none;
+  box-shadow: 0 0 6px #6c63ff66;
+}
+
+/* Buttons for both forms */
+.form-box button {
+  width: 100%;
+  padding: 14px 0;
+  background-color: #6c63ff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.form-box button:hover {
+  background-color: #5548c8;
+}
+
+/* Error and success messages */
+.error {
+  color: #e74c3c;
+  font-weight: 500;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.success {
+  color: #27ae60;
+  font-weight: 500;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 10px;
+}
+.btn-link {
+  display: inline-block;
+  width: 100%;
+  padding: 14px 0;
+  background-color: #6c63ff;
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 18px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.btn-link:hover {
+  background-color: #5548c8;
+}
