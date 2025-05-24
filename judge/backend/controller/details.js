@@ -86,27 +86,104 @@ export const signin = async (req, res) => {
     if (!login || !password) {
       return res.status(400).json({ message: 'Please provide login and password' });
     }
+
     const user = await User.findOne({
       $or: [{ email: login }, { handle: login }],
     });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
+
     const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (!isPasswordMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
+
     const token = jwt.sign(
       { userId: user._id, email: user.email },
       JWT_SECRET,
       { expiresIn: '2h' }
     );
+
+    // ✅ Return handle and email as well
     res.status(200).json({
       message: 'Login successful!',
       token,
+      handle: user.handle,
+      email: user.email,
     });
   } catch (error) {
     console.error('Error during signin:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const forgotPasswordRequestOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Email not found' });
+    }
+
+    const otp = generateOtp();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await Otp.findOneAndUpdate(
+      { email, purpose: 'forgot-password' },
+      { otp, expiresAt, purpose: 'forgot-password' },
+      { upsert: true }
+    );
+
+    await sendOtpEmail(email, otp);
+    res.status(200).json({ message: 'OTP sent to email' });
+  } catch (error) {
+    console.error('Error sending forgot-password OTP:', error);
+    res.status(500).json({ message: 'Failed to send OTP' });
+  }
+};
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await User.findOneAndUpdate({ email }, { password: hashedPassword });
+
+    // Clean up used OTPs
+    await Otp.deleteMany({ email, purpose: 'forgot-password' });
+
+    res.status(200).json({ message: 'Password reset successful' });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ message: 'Failed to reset password' });
+  }
+};
+export const forgotPasswordVerifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const otpDoc = await Otp.findOne({ email, otp, purpose: 'forgot-password' });
+
+    if (!otpDoc) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    if (otpDoc.expiresAt < new Date()) {
+      return res.status(400).json({ message: 'OTP expired' });
+    }
+
+    res.status(200).json({ message: 'OTP verified' });
+  } catch (error) {
+    console.error('Error verifying forgot-password OTP:', error);
+    res.status(500).json({ message: 'Error verifying OTP' });
+  }
+};
+
