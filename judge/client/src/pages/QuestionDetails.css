@@ -1,0 +1,23 @@
+.question-details-container {
+  display: flex;
+  height: 100vh;
+  gap: 10px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.left-pane, .right-pane {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 15px;
+  overflow-y: auto;
+  background: #f9f9f9;
+}
+
+.question-description {
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 1rem;
+  line-height: 1.4;
+}

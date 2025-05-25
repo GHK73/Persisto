@@ -2,68 +2,77 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8000';
 
-// Create axios instance with base URL
+// Axios instance
 const api = axios.create({
   baseURL: API_URL,
 });
 
-// Interceptor to add Authorization header with token for all requests except signup/signin
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token && !config.url.includes('/signup') && !config.url.includes('/signin')) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-}, (error) => {
-  return Promise.reject(error);
-});
+// Add token to headers except for auth routes
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (
+      token &&
+      !config.url.includes('/signup') &&
+      !config.url.includes('/signin') &&
+      !config.url.includes('/forgot-password')
+    ) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log(`[API] Added token to request: ${config.method.toUpperCase()} ${config.url}`);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-// Signup APIs
-export const requestSignupOtp = (email) => {
-  return api.post('/signup/request-otp', { email });
-};
+// === AUTH ROUTES ===
 
-export const verifySignupOtp = (email, otp) => {
-  return api.post('/signup/verify-otp', { email, otp });
-};
+export const requestSignupOtp = (email) => api.post('/signup/request-otp', { email });
 
-export const completeSignup = (data) => {
-  // data: { name, handle, email, phone, password }
-  return api.post('/signup/complete', data);
-};
+export const verifySignupOtp = (email, otp) => api.post('/signup/verify-otp', { email, otp });
 
-// Signin API
-export const signinUser = (data) => {
-  // data: { login, password }
-  return api.post('/signin', data);
-};
+export const completeSignup = (data) => api.post('/signup/complete', data); // data: { name, handle, email, phone, password }
 
-// Auth check
-export const checkAuth = () => {
-  return api.post('/check-auth');
-};
+export const signinUser = (data) => api.post('/signin', data); // data: { login, password }
 
-// Forgot Password APIs
-export const sendOtpToEmail = (email) => {
-  return api.post('/forgot-password/request-otp', { email });
-};
+export const checkAuth = () => api.post('/check-auth');
 
-export const verifyEmailOtp = (email, otp) => {
-  return api.post('/forgot-password/verify-otp', { email, otp });
-};
+// === FORGOT PASSWORD ===
 
-export const resetPassword = (email, newPassword) => {
-  return api.post('/forgot-password/reset', { email, newPassword });
-};
+export const sendOtpToEmail = (email) => api.post('/forgot-password/request-otp', { email });
 
-// Fetch user stats (number of questions done)
-export const getUserStats = (userId) => {
-  return api.get(`/users/${userId}/stats`);
-};
+export const verifyEmailOtp = (email, otp) => api.post('/forgot-password/verify-otp', { email, otp });
 
-// Update profile picture
-export const updateProfilePicture = (userId, formData) => {
-  return api.post(`/users/${userId}/profile-pic`, formData, {
+export const resetPassword = (email, newPassword) =>
+  api.post('/forgot-password/reset', { email, newPassword });
+
+// === USER PROFILE ===
+
+export const getUserStats = (userId) => api.get(`/users/${userId}/stats`);
+
+export const updateProfilePicture = (userId, formData) =>
+  api.post(`/users/${userId}/profile-pic`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+
+// === QUESTIONS ===
+
+// Get all questions
+export const getAllQuestions = async () => {
+  const response = await api.get('/questions');
+  return response.data;  // Return only the array of questions
 };
+
+// Get question details
+export const getQuestionById = (id) => api.get(`/questions/${id}`);
+
+// Upload a new question
+export const addQuestion = (formData) =>
+  api.post('/questions', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+// Delete a question by ID
+export const deleteQuestion = (id) => api.delete(`/questions/${id}`);

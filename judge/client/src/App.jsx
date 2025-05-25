@@ -1,50 +1,16 @@
+// App.jsx
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Signup from './pages/signup.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import Signin from './pages/signin.jsx';
-import Dashboard from './pages/dashboard.jsx'; // user dashboard page
+import Dashboard from './pages/dashboard.jsx';
+import QuestionsList from './pages/QuestionsList.jsx';
+import QuestionDetail from './pages/QuestionDetail.jsx';
+import AddQuestion from './pages/AddQuestion.jsx';
+import Navbar from './components/Navbar.jsx';
 import { checkAuth } from './service/api.js';
-
-function Navbar({ user, logout }) {
-  const navigate = useNavigate();
-
-  return (
-    <nav className="navbar">
-      <div className="navbar-content">
-        <Link to="/" className="navbar-logo">Online Judge</Link>
-        <div className="navbar-right">
-          {user ? (
-            <>
-              {/* Clickable user handle navigates to dashboard */}
-              <button
-                className="plain-link user-email"
-                onClick={() => navigate('/dashboard')}
-                title="Go to Dashboard"
-                style={{
-                  cursor: 'pointer',
-                  background: 'none',
-                  border: 'none',
-                  padding: 0,
-                  fontSize: 'inherit',
-                  color: 'inherit'
-                }}
-              >
-                {user.handle || user.email}
-              </button>
-              <button className="plain-link" onClick={logout}>Logout</button>
-            </>
-          ) : (
-            <>
-              <Link to="/signup" className="plain-link">Sign Up</Link>
-              <Link to="/signin" className="plain-link">Sign In</Link>
-            </>
-          )}
-        </div>
-      </div>
-    </nav>
-  );
-}
+import './App.css';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -65,7 +31,6 @@ function App() {
       }
     };
 
-    // Show welcome links only once
     const linksShown = localStorage.getItem('welcomeLinksShown');
     if (!linksShown) {
       setShowLinks(true);
@@ -109,12 +74,11 @@ function App() {
         />
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin onSigninSuccess={setUser} />} />
-        {/* Removed /profile route */}
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route
-          path="/dashboard"
-          element={user ? <Dashboard user={user} /> : <Signin onSigninSuccess={setUser} />}
-        />
+        <Route path="/dashboard" element={user ? <Dashboard user={user} /> : <Signin onSigninSuccess={setUser} />} />
+        <Route path="/questions" element={<QuestionsList />} />
+        <Route path="/questions/add" element={user ? <AddQuestion /> : <Signin onSigninSuccess={setUser} />} />
+        <Route path="/questions/:id" element={<QuestionDetail />} />
       </Routes>
     </div>
   );

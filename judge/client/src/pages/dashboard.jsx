@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { updateProfilePicture, getUserStats } from '../service/api.js';
+import '../App.css';
+
 
 function Dashboard({ user }) {
   const [profilePic, setProfilePic] = useState(user.profilePic || '');
