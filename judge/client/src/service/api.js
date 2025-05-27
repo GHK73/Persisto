@@ -76,3 +76,8 @@ export const addQuestion = (formData) =>
 
 // Delete a question by ID
 export const deleteQuestion = (id) => api.delete(`/questions/${id}`);
+
+
+export const submitCodeApi = (data) => api.post('/code/submit', data);
+
+export const runCodeApi = (data) => api.post('/code/run', data); 

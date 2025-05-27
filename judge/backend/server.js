@@ -1,9 +1,11 @@
+// server.js or index.js
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import DBConnection from './database/db.js';
-import router from './routes/router.js';             // your other routes
+import authRoutes from './routes/router.js';
 import questionRoutes from './routes/questionRoutes.js';
+import codeRoutes from './routes/code.js';
 
 dotenv.config();
 
@@ -11,11 +13,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Mount /questions routes first
+// Routes
 app.use('/questions', questionRoutes);
-
-// Mount other routes
-app.use('/', router);
+app.use('/code', codeRoutes);
+app.use('/', authRoutes);
 
 DBConnection();
 
