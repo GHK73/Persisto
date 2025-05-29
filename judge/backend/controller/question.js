@@ -14,13 +14,11 @@ export const uploadQuestion = async (req, res) => {
     const { title, difficulty, tags } = req.body;
     const questionId = uuidv4();
     const questionDir = path.join(basePath, questionId);
-
     await fs.mkdir(questionDir, { recursive: true });
 
     const testCases = [];
     let descriptionFile = null;
 
-    // Gather all files from multer fields
     const allFiles = [
       ...(req.files.description || []),
       ...(req.files.inputFiles || []),
@@ -31,12 +29,10 @@ export const uploadQuestion = async (req, res) => {
       const destPath = path.join(questionDir, file.originalname);
       await fs.rename(file.path, destPath);
 
-      // Detect description file based on field name
       if (file.fieldname === 'description') {
         descriptionFile = file.originalname;
       }
 
-      // Detect test cases by input file pattern
       const match = file.originalname.match(/^input(\d+)\.txt$/);
       if (match) {
         const index = match[1];
@@ -44,7 +40,7 @@ export const uploadQuestion = async (req, res) => {
         const outputFile = `output${index}.txt`;
         const outputPath = path.join(questionDir, outputFile);
         try {
-          await fs.access(outputPath); // check if output file exists
+          await fs.access(outputPath);
           testCases.push({ inputFile, outputFile });
         } catch {}
       }
@@ -135,7 +131,7 @@ export const getQuestionList = async (req, res) => {
   }
 };
 
-// --- Get Single Question with Description ---
+// --- Get Question Details ---
 export const getQuestionDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -160,5 +156,51 @@ export const getQuestionDetails = async (req, res) => {
   } catch (error) {
     console.error('Fetch details error:', error);
     res.status(500).json({ message: 'Failed to fetch question details' });
+  }
+};
+
+// --- Get User's Questions ---
+export const getUserQuestions = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const questions = await Question.find(
+      { uploadedBy: userId },
+      {
+        _id: 0,
+        questionId: 1,
+        title: 1,
+        difficulty: 1,
+        tags: 1,
+        descriptionFile: 1,
+        directoryPath: 1,
+      }
+    );
+
+    const questionsWithDesc = await Promise.all(
+      questions.map(async (q) => {
+        let description = 'No description available.';
+        if (q.descriptionFile) {
+          try {
+            const descPath = path.join(q.directoryPath, q.descriptionFile);
+            let fullDesc = await fs.readFile(descPath, 'utf-8');
+            description = fullDesc.split('Input Format:')[0].trim();
+          } catch (err) {
+            console.warn(`Failed to read description file: ${err.message}`);
+          }
+        }
+        return {
+          questionId: q.questionId,
+          title: q.title,
+          difficulty: q.difficulty,
+          tags: q.tags,
+          description,
+        };
+      })
+    );
+
+    res.json(questionsWithDesc);
+  } catch (error) {
+    console.error('Error fetching user questions:', error);
+    res.status(500).json({ message: 'Failed to fetch questions' });
   }
 };

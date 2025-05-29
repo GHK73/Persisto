@@ -1,79 +1,80 @@
 import React, { useEffect, useState } from 'react';
-import { getAllQuestions, deleteQuestion } from '../service/api';
-import { Link } from 'react-router-dom';
-import '../App.css';
+import { getUserQuestions, deleteQuestion } from '../service/api.js';
+import "../App.css";
 
-export default function QuestionsList() {
+const QuestionList = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const fetchQuestions = async () => {
-    try {
-      const res = await getAllQuestions();
-      const questionsData = res.map((q) => ({
-        questionId: q._id || q.questionId,
-        title: q.title,
-        difficulty: q.difficulty,
-      }));
-      setQuestions(questionsData);
-    } catch (error) {
-      console.error('Failed to fetch questions', error);
-      setError('Could not load questions. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const res = await getUserQuestions();
+        console.log('Fetched questions:', res);
+        if (Array.isArray(res)) {
+          setQuestions(res);
+        } else {
+          console.error('Expected an array but got:', res);
+        }
+      } catch (error) {
+        console.error('Error loading questions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchQuestions();
   }, []);
 
   const handleDelete = async (questionId) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('You must be logged in to delete a question.');
-      return;
-    }
-
     if (!window.confirm('Are you sure you want to delete this question?')) return;
-
     try {
       await deleteQuestion(questionId);
-      alert('Question deleted successfully');
-      setQuestions((prev) => prev.filter((q) => q.questionId !== questionId));
-    } catch (error) {
-      console.error('Failed to delete question', error.response || error);
-      alert('Failed to delete question');
+      setQuestions(prev => prev.filter(q => q.questionId !== questionId));
+    } catch (err) {
+      console.error('Delete failed:', err);
     }
   };
 
+  const handleUpdate = (questionId) => {
+    alert(`Redirect to update page for question ID: ${questionId}`);
+  };
+
+  if (loading) return <div className="questions-list-container">Loading...</div>;
+
   return (
     <div className="questions-list-container">
-      <h2>Available Coding Questions</h2>
-      {loading ? (
-        <p>Loading questions...</p>
-      ) : error ? (
-        <p className="error">{error}</p>
-      ) : questions.length === 0 ? (
-        <p>No questions available.</p>
+      <h2>My Questions</h2>
+      {questions.length === 0 ? (
+        <p className="text-gray-500">You have not uploaded any questions yet.</p>
       ) : (
         <ul className="questions-list">
-          {questions.map(({ questionId, title, difficulty }) => (
-            <li key={questionId} className="question-list-item">
-              <Link to={`/questions/${questionId}`} className="question-link">
-                {title} <span className="difficulty-tag">[{difficulty}]</span>
-              </Link>
-              <button
-                onClick={() => handleDelete(questionId)}
-                className="btn-delete"
-              >
-                Delete
-              </button>
-            </li>
+          {questions.map(q => (
+            <li key={q.questionId} className="question-list-item flex justify-between items-center">
+  <div className="question-info">
+    <span className="question-link">{q.title}</span>
+    <span className="difficulty-tag">{q.difficulty}</span>
+  </div>
+  <div className="button-group">
+    <button
+      onClick={() => handleUpdate(q.questionId)}
+      className="btn-edit"
+    >
+      Edit
+    </button>
+    <button
+      onClick={() => handleDelete(q.questionId)}
+      className="btn-delete"
+    >
+      Delete
+    </button>
+  </div>
+</li>
+
           ))}
         </ul>
       )}
     </div>
   );
-}
+};
+
+export default QuestionList;

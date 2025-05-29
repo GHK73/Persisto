@@ -100,17 +100,21 @@ export const signin = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      {
+        userId: user._id,
+        email: user.email,
+        isAdmin: user.isAdmin, // Include in token
+      },
       JWT_SECRET,
       { expiresIn: '2h' }
     );
 
-    // ✅ Return handle and email as well
     res.status(200).json({
       message: 'Login successful!',
       token,
       handle: user.handle,
       email: user.email,
+      isAdmin: user.isAdmin, // Return in response
     });
   } catch (error) {
     console.error('Error during signin:', error);

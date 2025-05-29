@@ -93,7 +93,7 @@ export default function AddQuestion() {
       if (test.solution) formData.append('outputFiles', test.solution);
     });
 
-    // 🔍 Debug logs
+    // Debug logs
     console.log('Submitting form data:');
     for (const [key, value] of formData.entries()) {
       console.log(`${key}:`, value);

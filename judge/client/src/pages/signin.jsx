@@ -23,8 +23,12 @@ function Signin({ onSigninSuccess }) {
       const res = await signinUser(formData);
       localStorage.setItem('token', res.data.token);
 
-      // Call onSigninSuccess once with the user object
-      onSigninSuccess({ handle: res.data.handle, email: res.data.email });
+      // Pass full user info including isAdmin
+      onSigninSuccess({
+        handle: res.data.handle,
+        email: res.data.email,
+        isAdmin: res.data.isAdmin, // <-- important
+      });
 
       setSuccessMessage('Login successful!');
       navigate(from, { replace: true });

@@ -6,7 +6,7 @@ import DBConnection from './database/db.js';
 import authRoutes from './routes/router.js';
 import questionRoutes from './routes/questionRoutes.js';
 import codeRoutes from './routes/code.js';
-
+import adminRoutes from './routes/adminRoutes.js';
 dotenv.config();
 
 const app = express();
@@ -14,6 +14,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+app.use('/admin', adminRoutes);
 app.use('/questions', questionRoutes);
 app.use('/code', codeRoutes);
 app.use('/', authRoutes);
