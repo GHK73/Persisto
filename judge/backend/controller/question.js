@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import Question from '../models/questions.js';
+import User from '../models/file.js';  
 import { v4 as uuidv4 } from 'uuid';
 
 const basePath = path.resolve('questions');
@@ -64,6 +65,9 @@ export const uploadQuestion = async (req, res) => {
     });
 
     await newQuestion.save();
+
+    console.log('Question saved successfully with questionId:', questionId);
+
     res.status(201).json({ message: 'Question uploaded successfully', questionId });
   } catch (error) {
     console.error('Upload error:', error);
@@ -114,23 +118,6 @@ export const deleteQuestion = async (req, res) => {
   }
 };
 
-// --- Get All Questions ---
-export const getQuestionList = async (req, res) => {
-  try {
-    const questions = await Question.find({}, {
-      _id: 0,
-      questionId: 1,
-      title: 1,
-      difficulty: 1,
-      tags: 1
-    });
-    res.json(questions);
-  } catch (error) {
-    console.error('List error:', error);
-    res.status(500).json({ message: 'Failed to fetch questions' });
-  }
-};
-
 // --- Get Question Details ---
 export const getQuestionDetails = async (req, res) => {
   try {
@@ -159,7 +146,7 @@ export const getQuestionDetails = async (req, res) => {
   }
 };
 
-// --- Get User's Questions ---
+// --- Get Logged-In User's Uploaded Questions ---
 export const getUserQuestions = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -201,6 +188,42 @@ export const getUserQuestions = async (req, res) => {
     res.json(questionsWithDesc);
   } catch (error) {
     console.error('Error fetching user questions:', error);
+    res.status(500).json({ message: 'Failed to fetch questions' });
+  }
+};
+
+// --- Get All Questions with Optional Solved Status ---
+export const getQuestionList = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+
+    const questions = await Question.find({}, {
+      _id: 0,
+      questionId: 1,
+      title: 1,
+      difficulty: 1,
+      tags: 1,
+    });
+
+    let solvedIds = new Set();
+    if (userId) {
+      const user = await User.findById(userId).select('solvedQuestions');
+      if (user && user.solvedQuestions) {
+        solvedIds = new Set(user.solvedQuestions);
+      }
+    }
+
+    const formatted = questions.map((q) => ({
+      questionId: q.questionId,
+      title: q.title,
+      difficulty: q.difficulty,
+      tags: q.tags,
+      solved: solvedIds.has(q.questionId),
+    }));
+
+    res.json(formatted);
+  } catch (error) {
+    console.error('List error:', error);
     res.status(500).json({ message: 'Failed to fetch questions' });
   }
 };

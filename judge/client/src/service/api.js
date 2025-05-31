@@ -1,103 +1,79 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000';
+const BASE_URL = 'http://localhost:8000'; // Adjust this if needed
 
-// Create Axios instance with base URL
-const api = axios.create({
-  baseURL: API_URL,
-});
+const api = axios.create({ baseURL: BASE_URL });
 
-// Add token to headers for requests except auth routes
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (
-      token &&
-      !config.url.includes('/signup') &&
-      !config.url.includes('/signin') &&
-      !config.url.includes('/forgot-password')
-    ) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log(`[API] Added token to request: ${config.method.toUpperCase()} ${config.url}`);
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// Add token to all requests except public ones
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  const publicRoutes = [
+    '/signup/request-otp',
+    '/signup/verify-otp',
+    '/signup/complete',
+    '/signin',
+    '/forgot-password/request-otp',
+    '/forgot-password/verify-otp',
+    '/forgot-password/reset',
+  ];
+  const isPublic = publicRoutes.some(route => config.url.includes(route));
+  if (token && !isPublic) {
+    config.headers.Authorization = `Bearer ${token}`;
+    console.log(`[API] Authenticated ${config.method.toUpperCase()} ${config.url}`);
+  }
+  return config;
+}, (error) => Promise.reject(error));
 
-// === AUTH ROUTES ===
+// ------------------ Auth ------------------
 
-// Request OTP for signup
 export const requestSignupOtp = (email) => api.post('/signup/request-otp', { email });
 
-// Verify OTP for signup
 export const verifySignupOtp = (email, otp) => api.post('/signup/verify-otp', { email, otp });
 
-// Complete signup with user details
-export const completeSignup = (data) => api.post('/signup/complete', data); 
-// data: { name, handle, email, phone, password }
+export const completeSignup = (data) => api.post('/signup/complete', data);
 
-// Signin user with login and password
-export const signinUser = (data) => api.post('/signin', data); 
-// data: { login, password }
+export const signinUser = (data) => api.post('/signin', data);
 
-// Check if token is valid / user is authenticated
 export const checkAuth = () => api.post('/check-auth');
 
-// === FORGOT PASSWORD ===
+// ------------------ Password Reset ------------------
 
-// Request OTP to email for password reset
 export const sendOtpToEmail = (email) => api.post('/forgot-password/request-otp', { email });
 
-// Verify OTP for forgot password
 export const verifyEmailOtp = (email, otp) => api.post('/forgot-password/verify-otp', { email, otp });
 
-// Reset password after OTP verification
 export const resetPassword = (email, newPassword) =>
   api.post('/forgot-password/reset', { email, newPassword });
 
-// === USER PROFILE ===
+// ------------------ User Profile ------------------
 
-// Get user stats by userId
-export const getUserStats = (userId) => api.get(`/users/${userId}/stats`);
-
-// Update user profile picture
 export const updateProfilePicture = (userId, formData) =>
   api.post(`/users/${userId}/profile-pic`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-
-// === QUESTIONS ===
-
-// Get all questions
-export const getAllQuestions = async () => {
-  const response = await api.get('/questions');
-  return response.data;  // Return only array of questions
-};
-
-// Get question details by ID
-export const getQuestionById = (id) => api.get(`/questions/${id}`);
-
-// Upload a new question with formData (includes files)
-export const addQuestion = (formData) =>
-  api.post('/questions', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
-  });
+  }).then((res) => res.data);
 
-// Delete a question by ID
-export const deleteQuestion = (id) => api.delete(`/questions/${id}`);
+export const getUserStats = (userId) =>
+  api.get(`/users/${userId}/stats`).then((res) => res.data);
 
-// Get questions uploaded by the authenticated user
-export const getUserQuestions = () =>
-  api.get('/questions/my-questions').then((res) => res.data);
+// ------------------ Questions ------------------
 
-// === CODE EXECUTION ===
+export const getAllQuestions = () => api.get('/questions').then((res) => res.data);
 
-// Submit code for evaluation
-export const submitCodeApi = (data) => api.post('/code/submit', data);
+export const getQuestionById = (id) => api.get(`/questions/${id}`).then((res) => res.data);
 
-// Run code without submission (for quick check)
-export const runCodeApi = (data) => api.post('/code/run', data);
+export const addQuestion = (formData) =>
+  api.post('/questions', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then((res) => res.data);
 
+export const deleteQuestion = (id) => api.delete(`/questions/${id}`).then((res) => res.data);
+
+export const getUserQuestions = () => api.get('/questions/my-questions').then((res) => res.data);
+
+// ------------------ Code Execution ------------------
+
+export const runCodeApi = (data) => api.post('/code/run', data).then((res) => res.data);
+
+export const submitCodeApi = (data) => api.post('/code/submit', data).then((res) => res.data);

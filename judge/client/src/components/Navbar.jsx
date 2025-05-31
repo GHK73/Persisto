@@ -8,19 +8,19 @@ export default function Navbar({ user, logout }) {
   return (
     <nav className="navbar">
       <div className="navbar-content">
-        <Link to="/" className="navbar-logo">Online Judge</Link>
+        <div className="navbar-left">
+          <Link to="/" className="navbar-logo">Online Judge</Link>
+          <Link to="/all-questions" className="plain-link" style={{ marginLeft: '1rem' }}>Questions</Link>
+        </div>
         <div className="navbar-right">
           {user ? (
             <>
-              {/* Show these links only if user is admin */}
               {user.isAdmin && (
                 <>
                   <Link to="/questions" className="plain-link">Contribution</Link>
                   <Link to="/questions/add" className="plain-link">Add Question</Link>
                 </>
               )}
-
-              {/* User handle button to dashboard */}
               <button
                 className="plain-link user-email"
                 onClick={() => navigate('/dashboard')}
@@ -36,7 +36,6 @@ export default function Navbar({ user, logout }) {
               >
                 {user.handle || user.email}
               </button>
-
               <button className="plain-link" onClick={logout}>Logout</button>
             </>
           ) : (

@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { updateProfilePicture, getUserStats } from '../service/api.js';
 import '../App.css';
 
+const BACKEND_BASE_URL = 'http://localhost:8000'; // Change if your backend URL is different
 
 function Dashboard({ user }) {
-  const [profilePic, setProfilePic] = useState(user.profilePic || '');
+  const [profilePic, setProfilePic] = useState(user?.profilePic || '');
   const [uploading, setUploading] = useState(false);
   const [questionsDone, setQuestionsDone] = useState(0);
   const [error, setError] = useState('');
@@ -12,14 +13,24 @@ function Dashboard({ user }) {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await getUserStats(user._id);
-        setQuestionsDone(res.data.questionsDone);
-      } catch {
-        setError('Failed to fetch stats');
+        if (!user?.uniqueId) return;
+        const res = await getUserStats(user.uniqueId);
+        setQuestionsDone(res.questionsDone);
+      } catch (err) {
+        console.error('Error fetching stats:', err);
+        setError('Failed to fetch user statistics');
       }
     };
     fetchStats();
-  }, [user._id]);
+  }, [user?.uniqueId]);
+
+  // Helper function to get full URL for profile pic
+  const getFullProfilePicUrl = (picPath) => {
+    if (!picPath) return '';
+    // If picPath already starts with http(s), return as is
+    if (picPath.startsWith('http://') || picPath.startsWith('https://')) return picPath;
+    return BACKEND_BASE_URL + picPath;
+  };
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -32,14 +43,23 @@ function Dashboard({ user }) {
       const formData = new FormData();
       formData.append('profilePic', file);
 
-      const res = await updateProfilePicture(user._id, formData);
-      setProfilePic(res.data.profilePic);
-    } catch {
+      const res = await updateProfilePicture(user.uniqueId, formData);
+      setProfilePic(res.profilePic);
+    } catch (err) {
+      console.error('Error uploading profile picture:', err);
       setError('Failed to update profile picture');
     } finally {
       setUploading(false);
     }
   };
+
+  if (!user) {
+    return (
+      <div className="form-container">
+        <div className="form-box">Loading user info...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="form-container">
@@ -49,7 +69,11 @@ function Dashboard({ user }) {
         <div className="user-info">
           <div className="profile-pic-wrapper">
             {profilePic ? (
-              <img src={profilePic} alt="Profile" className="profile-pic" />
+              <img
+                src={getFullProfilePicUrl(profilePic)}
+                alt="Profile"
+                className="profile-pic"
+              />
             ) : (
               <div className="no-pic-placeholder">No Profile Picture</div>
             )}

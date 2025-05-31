@@ -7,6 +7,7 @@ import Dashboard from './pages/dashboard.jsx';
 import QuestionsList from './pages/QuestionsList.jsx';
 import QuestionDetail from './pages/QuestionDetail.jsx';
 import AddQuestion from './pages/AddQuestion.jsx';
+import AllQuestions from './pages/AllQuestions.jsx';
 import Navbar from './components/Navbar.jsx';
 import { checkAuth } from './service/api.js';
 import './App.css';
@@ -45,7 +46,6 @@ function App() {
     navigate('/');
   };
 
-  // Debug: log user state to console
   useEffect(() => {
     console.log('Current user:', user);
   }, [user]);
@@ -68,8 +68,7 @@ function App() {
                 <h1>Welcome to Online Judge!</h1>
                 {showLinks && (
                   <p>
-                    Please <Link to="/signin">Sign In</Link> or{' '}
-                    <Link to="/signup">Sign Up</Link> to continue.
+                    Please <Link to="/signin">Sign In</Link> or <Link to="/signup">Sign Up</Link> to continue.
                   </p>
                 )}
               </div>
@@ -79,8 +78,17 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin onSigninSuccess={setUser} />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/dashboard" element={user ? <Dashboard user={user} /> : <Signin onSigninSuccess={setUser} />} />
-        <Route path="/questions" element={<QuestionsList user={user} />} />
+
+        <Route
+          path="/dashboard"
+          element={user ? <Dashboard user={user} /> : <Signin onSigninSuccess={setUser} />}
+        />
+
+        <Route
+          path="/questions"
+          element={<QuestionsList user={user} />}
+        />
+
         <Route
           path="/questions/add"
           element={
@@ -98,7 +106,9 @@ function App() {
             )
           }
         />
+
         <Route path="/questions/:id" element={<QuestionDetail />} />
+        <Route path="/all-questions" element={<AllQuestions user={user} />} />
       </Routes>
     </div>
   );

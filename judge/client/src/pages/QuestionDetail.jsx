@@ -9,7 +9,7 @@ export default function QuestionDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [language, setLanguage] = useState('cpp'); // default C++
+  const [language, setLanguage] = useState('cpp'); // Default language
   const [code, setCode] = useState('');
   const [input, setInput] = useState('');
 
@@ -19,10 +19,10 @@ export default function QuestionDetail() {
   useEffect(() => {
     const fetchQuestion = async () => {
       try {
-        const res = await getQuestionById(id);
-        setQuestion(res.data);
+        const data = await getQuestionById(id);
+        setQuestion(data);
       } catch (err) {
-        setError('Failed to load question');
+        setError('Failed to load question.');
       } finally {
         setLoading(false);
       }
@@ -34,8 +34,8 @@ export default function QuestionDetail() {
     setOutput('');
     setOutputError('');
     try {
-      const res = await runCodeApi({ code, language, input });
-      setOutput(res.data.output);
+      const result = await runCodeApi({ code, language, input });
+      setOutput(result.output);
     } catch (err) {
       setOutputError(err.response?.data?.error || err.message);
     }
@@ -45,11 +45,11 @@ export default function QuestionDetail() {
     setOutput('');
     setOutputError('');
     try {
-      const res = await submitCodeApi({ code, language, questionId: id });
-      if (res.data.passed) {
-        setOutput('All test cases passed!');
+      const result = await submitCodeApi({ code, language, questionId: id });
+      if (result.passed) {
+        setOutput('✅ All test cases passed!');
       } else {
-        setOutput(`Some test cases failed: ${res.data.failedCases.join(', ')}`);
+        setOutput(`❌ Some test cases failed: ${result.failedCases.join(', ')}`);
       }
     } catch (err) {
       setOutputError(err.response?.data?.error || err.message);
@@ -57,7 +57,7 @@ export default function QuestionDetail() {
   };
 
   if (loading) return <p>Loading question...</p>;
-  if (error) return <p>{error}</p>;
+  if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
   return (
     <div className="question-details-container">
@@ -68,9 +68,7 @@ export default function QuestionDetail() {
 
       <div className="right-pane">
         <div className="language-selector">
-          <label htmlFor="language-select" style={{ fontWeight: 'bold' }}>
-            Language:
-          </label>
+          <label htmlFor="language-select" style={{ fontWeight: 'bold' }}>Language:</label>
           <select
             id="language-select"
             value={language}
@@ -93,9 +91,7 @@ export default function QuestionDetail() {
         </div>
 
         <div className="input-section">
-          <label htmlFor="input-area" style={{ fontWeight: 'bold' }}>
-            Input (stdin):
-          </label>
+          <label htmlFor="input-area" style={{ fontWeight: 'bold' }}>Input (stdin):</label>
           <textarea
             id="input-area"
             className="input-box"
@@ -106,25 +102,15 @@ export default function QuestionDetail() {
         </div>
 
         <div className="button-group">
-          <button
-            onClick={handleRun}
-            style={{ backgroundColor: '#4caf50' }}
-          >
-            Run
-          </button>
-          <button
-            onClick={handleSubmit}
-            style={{ backgroundColor: '#2196f3' }}
-          >
-            Submit
-          </button>
+          <button onClick={handleRun} style={{ backgroundColor: '#4caf50', color: 'white' }}>Run</button>
+          <button onClick={handleSubmit} style={{ backgroundColor: '#2196f3', color: 'white' }}>Submit</button>
         </div>
 
         <div className="output-box">
           {outputError ? (
             <span className="output-error">{outputError}</span>
           ) : (
-            output
+            <pre>{output}</pre>
           )}
         </div>
       </div>

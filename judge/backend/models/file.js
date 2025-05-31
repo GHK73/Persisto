@@ -1,7 +1,8 @@
-    import mongoose from 'mongoose';
-    import { v4 as uuidv4 } from 'uuid';
+// models/User.js
+import mongoose from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
-    const UserSchema = new mongoose.Schema({
+const UserSchema = new mongoose.Schema({
   uniqueId: {
     type: String,
     default: () => uuidv4(),
@@ -19,23 +20,29 @@
   email: {
     type: String,
     required: true,
-    unique: true,
+    unique: true
   },
   phone: {
     type: String,
-    required: true,
+    required: true
   },
   password: {
     type: String,
-    required: true,
+    required: true
   },
   isAdmin: {
     type: Boolean,
-    default: false,  
+    default: false
+  },
+  solvedQuestions: {
+    type: [String],
+    default: []
+  },
+  profilePic: {
+    type: String,
+    default: ''
   }
 });
 
-    const User = mongoose.model('User',UserSchema);
-
-    
-    export default User;
+const User = mongoose.model('User', UserSchema);
+export default User;

@@ -36,6 +36,7 @@ export const runCode = async (req, res) => {
   }
 };
 
+
 export const submitCode = async (req, res) => {
   const userId = req.user?.id || req.user?.userId;
   if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
@@ -80,6 +81,14 @@ export const submitCode = async (req, res) => {
 
     await submission.save();
 
+    // ✅ Update user's solvedQuestions if passed and not already present
+    if (passed) {
+      await User.updateOne(
+        { _id: userId },
+        { $addToSet: { solvedQuestions: questionId } } // $addToSet prevents duplicates
+      );
+    }
+
     res.json({
       success: true,
       passed,
@@ -91,6 +100,7 @@ export const submitCode = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
 
 export const getUniqueQuestionsSolved = async (req, res) => {
   const userId = req.user?.id || req.user?.userId;
