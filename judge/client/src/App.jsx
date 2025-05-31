@@ -78,17 +78,11 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin onSigninSuccess={setUser} />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-
         <Route
           path="/dashboard"
           element={user ? <Dashboard user={user} /> : <Signin onSigninSuccess={setUser} />}
         />
-
-        <Route
-          path="/questions"
-          element={<QuestionsList user={user} />}
-        />
-
+        <Route path="/questions" element={<QuestionsList user={user} />} />
         <Route
           path="/questions/add"
           element={
@@ -106,7 +100,6 @@ function App() {
             )
           }
         />
-
         <Route path="/questions/:id" element={<QuestionDetail />} />
         <Route path="/all-questions" element={<AllQuestions user={user} />} />
       </Routes>

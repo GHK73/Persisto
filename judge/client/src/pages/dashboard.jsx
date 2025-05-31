@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { updateProfilePicture, getUserStats } from '../service/api.js';
 import '../App.css';
 
-const BACKEND_BASE_URL = 'http://localhost:8000'; // Change if your backend URL is different
+const BACKEND_BASE_URL = 'http://localhost:8000';
 
 function Dashboard({ user }) {
   const [profilePic, setProfilePic] = useState(user?.profilePic || '');
@@ -13,21 +13,19 @@ function Dashboard({ user }) {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        if (!user?.uniqueId) return;
-        const res = await getUserStats(user.uniqueId);
-        setQuestionsDone(res.questionsDone);
+        if (!user?.handle) return;
+        const res = await getUserStats(user.handle);  // use handle here
+        setQuestionsDone(res.questionsDone || 0);
       } catch (err) {
         console.error('Error fetching stats:', err);
         setError('Failed to fetch user statistics');
       }
     };
     fetchStats();
-  }, [user?.uniqueId]);
+  }, [user?.handle]);
 
-  // Helper function to get full URL for profile pic
   const getFullProfilePicUrl = (picPath) => {
     if (!picPath) return '';
-    // If picPath already starts with http(s), return as is
     if (picPath.startsWith('http://') || picPath.startsWith('https://')) return picPath;
     return BACKEND_BASE_URL + picPath;
   };
@@ -42,8 +40,7 @@ function Dashboard({ user }) {
     try {
       const formData = new FormData();
       formData.append('profilePic', file);
-
-      const res = await updateProfilePicture(user.uniqueId, formData);
+      const res = await updateProfilePicture(user.handle, formData);  // use handle here
       setProfilePic(res.profilePic);
     } catch (err) {
       console.error('Error uploading profile picture:', err);
