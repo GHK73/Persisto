@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { signinUser } from '../service/api';
+import { signinUser  } from '../service/api';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import '../App.css';
 
@@ -20,14 +20,13 @@ function Signin({ onSigninSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await signinUser(formData);
+      const res = await signinUser (formData);
       localStorage.setItem('token', res.data.token);
 
-      // Pass full user info including isAdmin
       onSigninSuccess({
         handle: res.data.handle,
         email: res.data.email,
-        isAdmin: res.data.isAdmin, // <-- important
+        isAdmin: res.data.isAdmin,
       });
 
       setSuccessMessage('Login successful!');
@@ -67,13 +66,13 @@ function Signin({ onSigninSuccess }) {
           onChange={handleChange}
           required
         />
-        <button type="submit">Sign In</button>
+        <button type="submit" className="btn-submit">Sign In</button>
         {error && <p className="error">{error}</p>}
         {successMessage && <p className="success">{successMessage}</p>}
-        <p style={{ marginTop: '20px', textAlign: 'center' }}>
+        <p className="form-footer">
           Don't have an account? <Link to="/signup">Sign Up</Link>
         </p>
-        <p style={{ textAlign: 'center', marginTop: '10px' }}>
+        <p className="form-footer">
           <Link to="/forgot-password">Forgot Password?</Link>
         </p>
       </form>

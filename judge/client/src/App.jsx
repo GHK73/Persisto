@@ -13,19 +13,19 @@ import { checkAuth } from './service/api.js';
 import './App.css';
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser ] = useState(null);
   const [showLinks, setShowLinks] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkUser = async () => {
+    const checkUser  = async () => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
           const res = await checkAuth(token);
-          setUser(res.data.user);
+          setUser (res.data.user);
         } catch {
-          setUser(null);
+          setUser (null);
           localStorage.removeItem('token');
         }
       }
@@ -37,12 +37,12 @@ function App() {
       localStorage.setItem('welcomeLinksShown', 'true');
     }
 
-    checkUser();
+    checkUser ();
   }, []);
 
   const logout = () => {
     localStorage.removeItem('token');
-    setUser(null);
+    setUser (null);
     navigate('/');
   };
 
@@ -76,11 +76,11 @@ function App() {
           }
         />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/signin" element={<Signin onSigninSuccess={setUser} />} />
+        <Route path="/signin" element={<Signin onSigninSuccess={setUser } />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route
           path="/dashboard"
-          element={user ? <Dashboard user={user} /> : <Signin onSigninSuccess={setUser} />}
+          element={user ? <Dashboard user={user} /> : <Signin onSigninSuccess={setUser } />}
         />
         <Route path="/questions" element={<QuestionsList user={user} />} />
         <Route
@@ -90,13 +90,13 @@ function App() {
               user.isAdmin ? (
                 <AddQuestion />
               ) : (
-                <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
+                <div className="access-denied">
                   <h2>Access Denied</h2>
                   <p>You do not have permission to view this page.</p>
                 </div>
               )
             ) : (
-              <Signin onSigninSuccess={setUser} />
+              <Signin onSigninSuccess={setUser } />
             )
           }
         />

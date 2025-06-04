@@ -1,56 +1,61 @@
 .question-details-container {
   display: flex;
   height: 100vh;
-  gap: 10px;
-  padding: 20px;
+  width: 100vw; /* full viewport width */
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
+  background-color: #eaeaea; /* Light gray background */
 }
 
 .left-pane, .right-pane {
-  flex: 1;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 15px;
+  width: 50%; /* half width each */
+  border-radius: 0; /* no border radius to align edges */
+  padding: 24px; /* consistent padding inside */
   overflow-y: auto;
-  background: #f9f9f9;
+  background: #ffffff; /* White background for content */
+  box-shadow: none; /* Remove shadows for clean split */
+  box-sizing: border-box;
+  border: none;
+}
+
+.question-title {
+  font-size: 1.5rem;
+  color: #333; /* Dark text for better readability */
+  margin-bottom: 10px;
 }
 
 .question-description {
   white-space: pre-wrap;
-  font-family: monospace;
+  font-family: 'Courier New', Courier, monospace;
   font-size: 1rem;
-  line-height: 1.4;
-}
-.question-details-container {
-  display: flex;
-  height: 100vh;
-  padding: 1rem;
-  box-sizing: border-box;
-}
-
-.left-pane {
-  width: 50%;
-  padding-right: 1rem;
-  border-right: 1px solid #ccc;
-  overflow-y: auto;
+  line-height: 1.5;
+  color: #555; /* Slightly lighter text for description */
 }
 
 .right-pane {
-  width: 50%;
   display: flex;
   flex-direction: column;
-  padding-left: 1rem;
+  padding-left: 24px;
+  box-sizing: border-box;
 }
 
 .language-selector {
   display: flex;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
-.language-selector select {
-  margin-left: 0.5rem;
-  padding: 4px;
+.language-label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.language-dropdown {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9; /* Light background for dropdown */
 }
 
 .code-editor-container {
@@ -61,19 +66,37 @@
   overflow: hidden;
 }
 
+.code-editor {
+  width: 100%;
+  height: 300px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  padding: 1rem;
+  border: none;
+  resize: none;
+  outline: none;
+  background-color: #f9f9f9; /* Light background for code editor */
+}
+
 .input-section {
   display: flex;
   flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.input-label {
+  font-weight: bold;
+  margin-bottom: 5px;
 }
 
 .input-box {
   height: 80px;
   padding: 8px;
-  font-family: monospace;
+  font-family: 'Courier New', Courier, monospace;
   resize: vertical;
-  margin-bottom: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
+  background-color: #f9f9f9; /* Light background for input box */
 }
 
 .button-group {
@@ -82,25 +105,37 @@
   gap: 10px;
 }
 
-.button-group button {
-  padding: 8px 16px;
+.btn-run, .btn-submit {
+  padding: 10px 20px;
   font-weight: bold;
   cursor: pointer;
   border: none;
   border-radius: 4px;
-  background-color: #007acc;
   color: white;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.3s ease;
 }
 
-.button-group button:hover {
-  background-color: #005fa3;
+.btn-run {
+  background-color: #4caf50; /* Green for run button */
 }
+
+.btn-run:hover {
+  background-color: #45a049; /* Darker green on hover */
+}
+
+.btn-submit {
+  background-color: #2196f3; /* Blue for submit button */
+}
+
+.btn-submit:hover {
+  background-color: #1976d2; /* Darker blue on hover */
+}
+
 .output-box {
   min-height: 100px;
   background-color: #222;
   color: #0f0;
-  font-family: monospace;
+  font-family: 'Courier New', Courier, monospace;
   padding: 1rem;
   border-radius: 4px;
   white-space: pre-wrap;
@@ -109,15 +144,12 @@
 }
 
 .output-error {
-  color: #f00;
+  color: #f00; /* Red for error messages */
 }
-.code-editor {
-  width: 100%;
-  height: 300px;
-  font-family: monospace;
-  font-size: 14px;
-  padding: 1rem;
-  border: none;
-  resize: none;
-  outline: none;
+
+.error-message {
+  color: #f00; /* Red for error messages */
+  font-weight: bold;
+  text-align: center;
 }
+

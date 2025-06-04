@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getQuestionById, runCodeApi, submitCodeApi } from '../service/api';
+import '../App.css';
 import './QuestionDetails.css';
 
 export default function QuestionDetail() {
@@ -57,22 +58,23 @@ export default function QuestionDetail() {
   };
 
   if (loading) return <p>Loading question...</p>;
-  if (error) return <p style={{ color: 'red' }}>{error}</p>;
+  if (error) return <p className="error-message">{error}</p>;
 
   return (
     <div className="question-details-container">
       <div className="left-pane">
-        <h2>{question.title}</h2>
+        <h2 className="question-title">{question.title}</h2>
         <pre className="question-description">{question.description || 'No description available.'}</pre>
       </div>
 
       <div className="right-pane">
         <div className="language-selector">
-          <label htmlFor="language-select" style={{ fontWeight: 'bold' }}>Language:</label>
+          <label htmlFor="language-select" className="language-label">Language:</label>
           <select
             id="language-select"
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
+            className="language-dropdown"
           >
             <option value="c">C</option>
             <option value="cpp">C++</option>
@@ -91,7 +93,7 @@ export default function QuestionDetail() {
         </div>
 
         <div className="input-section">
-          <label htmlFor="input-area" style={{ fontWeight: 'bold' }}>Input (stdin):</label>
+          <label htmlFor="input-area" className="input-label">Input (stdin):</label>
           <textarea
             id="input-area"
             className="input-box"
@@ -102,8 +104,8 @@ export default function QuestionDetail() {
         </div>
 
         <div className="button-group">
-          <button onClick={handleRun} style={{ backgroundColor: '#4caf50', color: 'white' }}>Run</button>
-          <button onClick={handleSubmit} style={{ backgroundColor: '#2196f3', color: 'white' }}>Submit</button>
+          <button onClick={handleRun} className="btn-run">Run</button>
+          <button onClick={handleSubmit} className="btn-submit">Submit</button>
         </div>
 
         <div className="output-box">

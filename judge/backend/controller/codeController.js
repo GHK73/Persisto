@@ -7,9 +7,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import mongoose from 'mongoose';
 import User from '../models/file.js';
+import Question from '../models/questions.js';
 
-
-const runCodeByLanguage = async (language, filePath, input) => {
+// Function to run code based on the programming language
+export const runCode = async (language, filePath, input) => {
   if (language === 'cpp' || language === 'c++' || language === 'c') {
     return await executeCpp(filePath, input);
   } else if (language === 'python') {
@@ -21,24 +22,7 @@ const runCodeByLanguage = async (language, filePath, input) => {
   }
 };
 
-export const runCode = async (req, res) => {
-  const userId = req.user?.id || req.user?.userId;
-  if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
-
-  const { code, language = 'cpp', input = '' } = req.body;
-  if (!code) return res.status(400).json({ success: false, error: 'Code is required' });
-
-  try {
-    const filePath = generateFile(language, code);
-    const output = await runCodeByLanguage(language, filePath, input);
-    res.json({ success: true, output });
-  } catch (err) {
-    console.error('runCode error:', err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-};
-
-
+// Handle code submission
 export const submitCode = async (req, res) => {
   const userId = req.user?.id || req.user?.userId;
   if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
@@ -49,28 +33,51 @@ export const submitCode = async (req, res) => {
   }
 
   try {
-    const filePath = generateFile(language, code);
-    const questionPath = path.resolve('questions', questionId);
-    const testCases = await fs.readdir(questionPath);
+    // Generate temp file for user's code
+    const filePath = await generateFile(language, code);
+    console.log('Generated file path:', filePath);
 
-    const inputFiles = testCases.filter(f => f.startsWith('input') && f.endsWith('.txt'));
+    // Fetch question with its test cases
+    const question = await Question.findOne({ questionId });
+    if (!question) {
+      return res.status(404).json({ success: false, error: 'Question not found' });
+    }
+
     const failedCases = [];
 
-    for (const inputFile of inputFiles) {
-      const index = inputFile.match(/\d+/)?.[0];
-      const outputFile = `output${index}.txt`;
+    // Run code against all test cases
+    for (const tc of question.testCases) {
+      const inputFilePath = path.join(question.directoryPath, tc.inputFile);
+      const outputFilePath = path.join(question.directoryPath, tc.outputFile);
 
-      const inputData = await fs.readFile(path.join(questionPath, inputFile), 'utf-8');
-      const expectedOutput = await fs.readFile(path.join(questionPath, outputFile), 'utf-8');
-      const actualOutput = await runCodeByLanguage(language, filePath, inputData);
+      // Read test case input and expected output
+      const inputData = await fs.readFile(inputFilePath, 'utf-8');
+      const expectedOutput = await fs.readFile(outputFilePath, 'utf-8');
 
-      if (actualOutput.trim() !== expectedOutput.trim()) {
-        failedCases.push(inputFile);
+      console.log(`Running test case ${tc.inputFile}...`);
+
+      let actualOutput;
+      try {
+        actualOutput = await runCode(language, filePath, inputData);
+      } catch (execErr) {
+        console.error(`Execution error on ${tc.inputFile}:`, execErr.message);
+        failedCases.push(tc.inputFile);
+        continue;
+      }
+
+      // Normalize outputs (handle line endings, trailing spaces)
+      const normalizedExpected = expectedOutput.replace(/\r\n/g, '\n').trim();
+      const normalizedActual = actualOutput?.replace(/\r\n/g, '\n').trim();
+
+      if (normalizedActual !== normalizedExpected) {
+        console.log(`Test case failed: ${tc.inputFile}`);
+        failedCases.push(tc.inputFile);
       }
     }
 
     const passed = failedCases.length === 0;
 
+    // Save submission record
     const submission = new Submission({
       userId,
       questionId,
@@ -80,18 +87,24 @@ export const submitCode = async (req, res) => {
       failedCases,
       timestamp: new Date()
     });
-
     await submission.save();
 
-    // ✅ Update user's solvedQuestions if passed and not already present
+    // Update user's solvedQuestions if all test cases passed
     if (passed) {
       await User.updateOne(
         { _id: userId },
-        { $addToSet: { solvedQuestions: questionId } } // $addToSet prevents duplicates
+        { $addToSet: { solvedQuestions: questionId } }
       );
     }
 
-    res.json({
+    // Optional: cleanup generated user code file
+    try {
+      await fs.unlink(filePath);
+    } catch (cleanupErr) {
+      console.warn('Failed to delete temp code file:', cleanupErr.message);
+    }
+
+    return res.json({
       success: true,
       passed,
       message: passed ? 'All test cases passed!' : 'Some test cases failed',
@@ -99,11 +112,11 @@ export const submitCode = async (req, res) => {
     });
   } catch (err) {
     console.error('submitCode error:', err);
-    res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message });
   }
 };
 
-
+// Function to get the count of unique questions solved by the user
 export const getUniqueQuestionsSolved = async (req, res) => {
   const userId = req.user?.id || req.user?.userId;
   if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
@@ -116,8 +129,8 @@ export const getUniqueQuestionsSolved = async (req, res) => {
     ]);
 
     const count = solved.length > 0 ? solved[0].uniqueSolved : 0;
-    res.json({ success: true, uniqueQuestionsSolved: count });
+    return res.json({ success: true, uniqueQuestionsSolved: count });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message });
   }
 };

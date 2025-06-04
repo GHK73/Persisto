@@ -135,15 +135,15 @@ export const forgotPasswordRequestOtp = async (req, res) => {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     await Otp.findOneAndUpdate(
-      { email, purpose: 'forgot-password' },
-      { otp, expiresAt, purpose: 'forgot-password' },
+      { email, purpose: 'forgot_password' },
+      { otp, expiresAt, purpose: 'forgot_password' },
       { upsert: true }
     );
 
     await sendOtpEmail(email, otp);
     res.status(200).json({ message: 'OTP sent to email' });
   } catch (error) {
-    console.error('Error sending forgot-password OTP:', error);
+    console.error('Error sending forgot_password OTP:', error);
     res.status(500).json({ message: 'Failed to send OTP' });
   }
 };
@@ -174,7 +174,7 @@ export const forgotPasswordVerifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const otpDoc = await Otp.findOne({ email, otp, purpose: 'forgot-password' });
+    const otpDoc = await Otp.findOne({ email, otp, purpose: 'forgot_password' });
 
     if (!otpDoc) {
       return res.status(400).json({ message: 'Invalid OTP' });

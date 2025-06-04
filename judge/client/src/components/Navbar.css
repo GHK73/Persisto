@@ -1,0 +1,65 @@
+.navbar {
+  width: 100%; /* Ensure the navbar takes full width */
+  position: fixed; /* Keep it fixed at the top */
+  top: 0; /* Align to the top */
+  left: 0; /* Align to the left */
+  z-index: 1000; /* Ensure it stays above other content */
+  background-color: #4a90e2; /* Blue background for the navbar */
+  padding: 10px 20px; /* Padding for the navbar */
+  display: flex; /* Use flexbox for layout */
+  justify-content: space-between; /* Space between left and right sections */
+  align-items: center; /* Center items vertically */
+}
+
+.navbar-content {
+  display: flex;
+  width: 100%; /* Full width */
+  justify-content: space-between; /* Space between left and right sections */
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center; /* Center items vertically */
+}
+
+.navbar-logo {
+  font-size: 1.5rem; /* Logo font size */
+  color: white; /* Logo color */
+  text-decoration: none; /* Remove underline */
+  margin-right: 20px; /* Space between logo and questions link */
+}
+
+.navbar-link {
+  color: white; /* Link color */
+  text-decoration: none; /* Remove underline */
+  margin-left: 20px; /* Space between links */
+  font-weight: 500; /* Slightly bolder font */
+  transition: color 0.3s; /* Smooth color transition */
+}
+
+.navbar-link:hover {
+  color: #f0f0f0; /* Lighter color on hover */
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center; /* Center items vertically */
+}
+
+.navbar-button {
+  background: none; /* No background */
+  border: none; /* No border */
+  color: white; /* Button text color */
+  font-size: 1rem; /* Button font size */
+  margin-left: 20px; /* Space between buttons */
+  cursor: pointer; /* Pointer cursor on hover */
+  transition: color 0.3s; /* Smooth color transition */
+}
+
+.navbar-button:hover {
+  color: #f0f0f0; /* Lighter color on hover */
+}
+
+.user-email {
+  font-weight: bold; /* Bold font for user email */
+}

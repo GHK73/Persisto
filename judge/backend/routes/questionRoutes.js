@@ -28,8 +28,6 @@ router.get('/my-questions', authenicate, getUserQuestions);
 // Get question by id — must come after
 router.get('/:id', getQuestionDetails);
 
-// PUT /questions/:id
-router.put('/:id', authenicate, updateQuestion);
 
 
 export default router;

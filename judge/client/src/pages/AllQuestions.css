@@ -1,0 +1,79 @@
+.questions-container {
+  padding: 20px;
+  background-color: #f4f4f4; /* Light background for contrast */
+}
+
+h2 {
+  font-size: 2rem;
+  color: #333; /* Dark text for better readability */
+  margin-bottom: 20px;
+}
+
+.all-questions-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.horizontal-question-list {
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping of question cards */
+  gap: 20px; /* Space between question cards */
+}
+
+.question-link {
+  text-decoration: none; /* Remove underline from links */
+  min-width: 280px; /* Optional: Ensure minimum width for smaller screens */
+  flex: 1 1 calc(33.33% - 20px);
+  box-sizing: border-box;
+}
+
+.question-card {
+  background-color: #ffffff; /* White background for question cards */
+  border: 1px solid #ccc; /* Light border */
+  border-radius: 8px; /* Rounded corners */
+  padding: 15px; /* Padding inside the card */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  transition: transform 0.2s; /* Smooth transform on hover */
+  display: flex; /* Make card a flex container */
+  flex-direction: row;
+  align-items: center;
+  min-height: 90px;
+}
+
+.question-card:hover {
+  transform: translateY(-2px); /* Lift effect on hover */
+}
+
+.question-left {
+  flex-grow: 1; /* Take available horizontal space */
+  min-width: 0; /* Prevent overflow when long titles */
+}
+
+.question-left h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.25rem;
+  color: #222;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tags {
+  color: #777; /* Lighter color for tags */
+  font-size: 0.9rem; /* Smaller font size for tags */
+  margin-top: 5px; /* Space above tags */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.question-right {
+  text-align: right; /* Align status text to the right */
+  margin-left: 15px;
+  flex-shrink: 0; /* Prevent shrinking */
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #555;
+}
+

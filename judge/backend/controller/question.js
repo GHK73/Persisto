@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import Question from '../models/questions.js';
-import User from '../models/file.js';  
+import User from '../models/file.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const basePath = path.resolve('questions');
@@ -13,46 +13,57 @@ export const uploadQuestion = async (req, res) => {
     if (!userId) return res.status(401).json({ message: 'Unauthorized: userId missing' });
 
     const { title, difficulty, tags } = req.body;
+
+    // Generate a UUID for questionId and folder
     const questionId = uuidv4();
     const questionDir = path.join(basePath, questionId);
     await fs.mkdir(questionDir, { recursive: true });
 
-    const testCases = [];
-    let descriptionFile = null;
-
-    const allFiles = [
-      ...(req.files.description || []),
-      ...(req.files.inputFiles || []),
-      ...(req.files.outputFiles || [])
-    ];
-
-    for (const file of allFiles) {
-      const destPath = path.join(questionDir, file.originalname);
-      await fs.rename(file.path, destPath);
-
-      if (file.fieldname === 'description') {
-        descriptionFile = file.originalname;
-      }
-
-      const match = file.originalname.match(/^input(\d+)\.txt$/);
-      if (match) {
-        const index = match[1];
-        const inputFile = `input${index}.txt`;
-        const outputFile = `output${index}.txt`;
-        const outputPath = path.join(questionDir, outputFile);
-        try {
-          await fs.access(outputPath);
-          testCases.push({ inputFile, outputFile });
-        } catch {}
-      }
-    }
-
-    if (!descriptionFile) {
+    // --- Description file ---
+    if (!req.files?.description || req.files.description.length === 0) {
       return res.status(400).json({ message: 'Missing description file' });
     }
+    // Description file must be renamed with questionId + original extension
+    const descFileOriginal = req.files.description[0];
+    const descExt = path.extname(descFileOriginal.originalname);
+    const descriptionFileName = questionId + descExt;
+    const descDestPath = path.join(questionDir, descriptionFileName);
+    await fs.rename(descFileOriginal.path, descDestPath);
 
-    const tagsArray = typeof tags === 'string' ? tags.split(',').map(tag => tag.trim()) : tags;
+    // --- Test cases ---
+    if (!req.files?.inputFiles || !req.files?.outputFiles) {
+      return res.status(400).json({ message: 'Missing input or output test case files' });
+    }
+    const inputFiles = req.files.inputFiles;
+    const outputFiles = req.files.outputFiles;
 
+    if (inputFiles.length !== outputFiles.length) {
+      return res.status(400).json({ message: 'Input and output test files count mismatch' });
+    }
+
+    // Helper to rename any file with new UUID + ext in the question folder
+    const renameFileWithUUID = async (file) => {
+      const ext = path.extname(file.originalname);
+      const newName = uuidv4() + ext;
+      const destPath = path.join(questionDir, newName);
+      await fs.rename(file.path, destPath);
+      return newName;
+    };
+
+    const testCases = [];
+    for (let i = 0; i < inputFiles.length; i++) {
+      const inputUUIDName = await renameFileWithUUID(inputFiles[i]);
+      const outputUUIDName = await renameFileWithUUID(outputFiles[i]);
+      testCases.push({
+        inputFile: inputUUIDName,
+        outputFile: outputUUIDName,
+      });
+    }
+
+    // Normalize tags to array
+    const tagsArray = typeof tags === 'string' ? tags.split(',').map(t => t.trim()) : tags;
+
+    // Save question metadata in DB
     const newQuestion = new Question({
       questionId,
       title,
@@ -61,13 +72,12 @@ export const uploadQuestion = async (req, res) => {
       directoryPath: questionDir,
       uploadedBy: userId,
       testCases,
-      descriptionFile
+      descriptionFile: descriptionFileName, // SAME UUID as questionId + ext
     });
 
     await newQuestion.save();
 
-    console.log('Question saved successfully with questionId:', questionId);
-
+    console.log('Question uploaded successfully with questionId:', questionId);
     res.status(201).json({ message: 'Question uploaded successfully', questionId });
   } catch (error) {
     console.error('Upload error:', error);
@@ -80,15 +90,15 @@ export const updateQuestion = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
-    const question = await Question.findOne({ questionId: id });
 
+    const question = await Question.findOne({ questionId: id });
     if (!question) return res.status(404).json({ message: 'Question not found' });
     if (question.uploadedBy.toString() !== userId) return res.status(403).json({ message: 'Unauthorized' });
 
     const { title, difficulty, tags } = req.body;
     if (title) question.title = title;
     if (difficulty) question.difficulty = difficulty.toLowerCase();
-    if (tags) question.tags = typeof tags === 'string' ? tags.split(',').map(tag => tag.trim()) : tags;
+    if (tags) question.tags = typeof tags === 'string' ? tags.split(',').map(t => t.trim()) : tags;
 
     await question.save();
     res.status(200).json({ message: 'Question updated successfully' });
@@ -103,15 +113,22 @@ export const deleteQuestion = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
-    const question = await Question.findOne({ questionId: id });
 
+    const question = await Question.findOne({ questionId: id });
     if (!question) return res.status(404).json({ message: 'Question not found' });
     if (question.uploadedBy.toString() !== userId) return res.status(403).json({ message: 'Unauthorized' });
 
-    await fs.rm(question.directoryPath, { recursive: true, force: true });
-    await question.deleteOne();
+    // Delete question directory and files
+    try {
+      await fs.rm(question.directoryPath, { recursive: true, force: true });
+      console.log(`Deleted directory: ${question.directoryPath}`);
+    } catch (fsErr) {
+      console.warn(`Failed to delete directory ${question.directoryPath}:`, fsErr.message);
+      return res.status(500).json({ message: 'Failed to delete question files' });
+    }
 
-    res.status(200).json({ message: 'Question deleted successfully' });
+    await question.deleteOne();
+    res.status(200).json({ message: 'Question and files deleted successfully' });
   } catch (error) {
     console.error('Deletion error:', error);
     res.status(500).json({ message: 'Deletion failed' });
@@ -123,7 +140,6 @@ export const getQuestionDetails = async (req, res) => {
   try {
     const { id } = req.params;
     const question = await Question.findOne({ questionId: id });
-
     if (!question) return res.status(404).json({ message: 'Question not found' });
 
     let description = 'No description';

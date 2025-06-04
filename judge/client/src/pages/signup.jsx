@@ -5,7 +5,7 @@ import {
   completeSignup,
 } from '../service/api';
 import { Link, useNavigate } from 'react-router-dom';
-import '../App.css';
+import './Signup.css'; // Import the CSS file for styling
 
 function Signup() {
   const navigate = useNavigate();
@@ -78,20 +78,20 @@ function Signup() {
         <input type="text" name="name" placeholder="Name" onChange={handleChange} required />
         <input type="text" name="handle" placeholder="Handle" onChange={handleChange} required />
         <input type="email" name="email" placeholder="Email" onChange={handleChange} required disabled={emailVerified} />
-        {!otpSent && !emailVerified && <button type="button" onClick={sendOtp}>Send OTP</button>}
+        {!otpSent && !emailVerified && <button type="button" className="btn-otp" onClick={sendOtp}>Send OTP</button>}
         {otpSent && !emailVerified && (
           <>
             <input type="text" placeholder="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value)} />
-            <button type="button" onClick={verifyOtp}>Verify OTP</button>
+            <button type="button" className="btn-otp" onClick={verifyOtp}>Verify OTP</button>
           </>
         )}
         <input type="tel" name="phone" placeholder="Phone" onChange={handleChange} required />
         <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
         <input type="password" name="confirmPassword" placeholder="Confirm Password" onChange={handleChange} required />
-        <button type="submit">Sign Up</button>
+        <button type="submit" className="btn-submit">Sign Up</button>
         {error && <p className="error">{error}</p>}
         {successMessage && <p className="success">{successMessage}</p>}
-        <p style={{ marginTop: '15px', textAlign: 'center' }}>
+        <p className="form-footer">
           Already have an account? <Link to="/signin">Sign In</Link>
         </p>
       </form>

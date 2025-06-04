@@ -1,0 +1,108 @@
+.form-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  background-color: #f4f4f4; /* Light background for contrast */
+}
+
+.form-box {
+  background: #fff;
+  padding: 32px 28px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+}
+
+.form-box h2 {
+  font-weight: 700;
+  font-size: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+  color: #333;
+}
+
+.form-box input {
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border: 1.8px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.form-box input:focus {
+  border-color: #6c63ff;
+  outline: none;
+  box-shadow: 0 0 6px #6c63ff66;
+}
+
+.btn-otp {
+  width: 100%;
+  padding: 14px 0;
+  background-color: #1976d2; /* Blue background for OTP button */
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 18px; /* Space below OTP button */
+}
+
+.btn-otp:hover {
+  background-color: #115293; /* Darker blue on hover */
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 14px 0;
+  background-color: #6c63ff; /* Purple background for submit button */
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-submit:hover {
+  background-color: #5548c8; /* Darker purple on hover */
+}
+
+.error {
+  color: #e74c3c;
+  font-weight: 500;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.success {
+  color: #27ae60;
+  font-weight: 500;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.form-footer {
+  margin-top: 20px;
+  text-align: center;
+  color: #555;
+}
+
+.form-footer a {
+  color: #6c63ff;
+  text-decoration: none;
+}
+
+.form-footer a:hover {
+  text-decoration: underline;
+}
