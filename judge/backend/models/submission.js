@@ -5,8 +5,9 @@ const submissionSchema = new mongoose.Schema({
   questionId: { type: String, required: true },
   language: { type: String, default: 'cpp' },
   code: { type: String, required: true },
+  codeFileKey: { type: String, required: true }, 
   passed: { type: Boolean, required: true },
-  failedCases: [String], // Store only failed test case filenames
+  failedCases: [String], 
   timestamp: { type: Date, default: Date.now }
 });
 

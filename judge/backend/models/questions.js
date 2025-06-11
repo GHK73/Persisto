@@ -1,13 +1,13 @@
 import mongoose from 'mongoose';
 
 const testCaseSchema = new mongoose.Schema({
-  inputFile: {
+  inputFileKey: {
     type: String,
-    required: true
+    required: true // S3 object key for input file
   },
-  outputFile: {
+  outputFileKey: {
     type: String,
-    required: true
+    required: true // S3 object key for output file
   }
 });
 
@@ -26,10 +26,6 @@ const QuestionSchema = new mongoose.Schema({
     enum: ['easy', 'medium', 'hard'],
     required: true
   },
-  directoryPath: {
-    type: String,
-    required: true
-  },
   uploadedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -43,11 +39,10 @@ const QuestionSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
-  descriptionFile: {
+  descriptionFileKey: {
     type: String,
-    required: true 
+    required: true // S3 object key for description
   }
 });
 
-const Question = mongoose.model('Question', QuestionSchema);
-export default Question;
+export default mongoose.model('Question', QuestionSchema);

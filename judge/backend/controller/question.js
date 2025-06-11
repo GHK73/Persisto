@@ -1,10 +1,13 @@
-import fs from 'fs/promises';
-import path from 'path';
+// controllers/questionController.js
 import Question from '../models/questions.js';
 import User from '../models/file.js';
 import { v4 as uuidv4 } from 'uuid';
+import { uploadFileToS3 } from '../utils/s3Uploader.js';
+import s3Client from '../utils/s3Client.js';
+import { GetObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import {streamToString} from '../utils/streamToString.js';
 
-const basePath = path.resolve('questions');
+const BUCKET = process.env.S3_BUCKET_NAME;
 
 // --- Upload Question ---
 export const uploadQuestion = async (req, res) => {
@@ -13,71 +16,53 @@ export const uploadQuestion = async (req, res) => {
     if (!userId) return res.status(401).json({ message: 'Unauthorized: userId missing' });
 
     const { title, difficulty, tags } = req.body;
-
-    // Generate a UUID for questionId and folder
     const questionId = uuidv4();
-    const questionDir = path.join(basePath, questionId);
-    await fs.mkdir(questionDir, { recursive: true });
 
-    // --- Description file ---
     if (!req.files?.description || req.files.description.length === 0) {
       return res.status(400).json({ message: 'Missing description file' });
     }
-    // Description file must be renamed with questionId + original extension
+
     const descFileOriginal = req.files.description[0];
     const descExt = path.extname(descFileOriginal.originalname);
     const descriptionFileName = questionId + descExt;
-    const descDestPath = path.join(questionDir, descriptionFileName);
-    await fs.rename(descFileOriginal.path, descDestPath);
+    const descriptionS3Key = `questions/${questionId}/${descriptionFileName}`;
 
-    // --- Test cases ---
+    await uploadFileToS3(descFileOriginal.path, descriptionS3Key);
+
     if (!req.files?.inputFiles || !req.files?.outputFiles) {
       return res.status(400).json({ message: 'Missing input or output test case files' });
     }
+
     const inputFiles = req.files.inputFiles;
     const outputFiles = req.files.outputFiles;
-
     if (inputFiles.length !== outputFiles.length) {
       return res.status(400).json({ message: 'Input and output test files count mismatch' });
     }
 
-    // Helper to rename any file with new UUID + ext in the question folder
-    const renameFileWithUUID = async (file) => {
-      const ext = path.extname(file.originalname);
-      const newName = uuidv4() + ext;
-      const destPath = path.join(questionDir, newName);
-      await fs.rename(file.path, destPath);
-      return newName;
-    };
-
     const testCases = [];
     for (let i = 0; i < inputFiles.length; i++) {
-      const inputUUIDName = await renameFileWithUUID(inputFiles[i]);
-      const outputUUIDName = await renameFileWithUUID(outputFiles[i]);
-      testCases.push({
-        inputFile: inputUUIDName,
-        outputFile: outputUUIDName,
-      });
+      const inputKey = `questions/${questionId}/${uuidv4()}${path.extname(inputFiles[i].originalname)}`;
+      const outputKey = `questions/${questionId}/${uuidv4()}${path.extname(outputFiles[i].originalname)}`;
+
+      await uploadFileToS3(inputFiles[i].path, inputKey);
+      await uploadFileToS3(outputFiles[i].path, outputKey);
+
+      testCases.push({ inputFile: inputKey, outputFile: outputKey });
     }
 
-    // Normalize tags to array
     const tagsArray = typeof tags === 'string' ? tags.split(',').map(t => t.trim()) : tags;
 
-    // Save question metadata in DB
     const newQuestion = new Question({
       questionId,
       title,
       difficulty: difficulty.toLowerCase(),
       tags: tagsArray,
-      directoryPath: questionDir,
       uploadedBy: userId,
       testCases,
-      descriptionFile: descriptionFileName, // SAME UUID as questionId + ext
+      descriptionFile: descriptionS3Key,
     });
 
     await newQuestion.save();
-
-    console.log('Question uploaded successfully with questionId:', questionId);
     res.status(201).json({ message: 'Question uploaded successfully', questionId });
   } catch (error) {
     console.error('Upload error:', error);
@@ -85,57 +70,13 @@ export const uploadQuestion = async (req, res) => {
   }
 };
 
-// --- Update Question ---
-export const updateQuestion = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.userId;
-
-    const question = await Question.findOne({ questionId: id });
-    if (!question) return res.status(404).json({ message: 'Question not found' });
-    if (question.uploadedBy.toString() !== userId) return res.status(403).json({ message: 'Unauthorized' });
-
-    const { title, difficulty, tags } = req.body;
-    if (title) question.title = title;
-    if (difficulty) question.difficulty = difficulty.toLowerCase();
-    if (tags) question.tags = typeof tags === 'string' ? tags.split(',').map(t => t.trim()) : tags;
-
-    await question.save();
-    res.status(200).json({ message: 'Question updated successfully' });
-  } catch (error) {
-    console.error('Update error:', error);
-    res.status(500).json({ message: 'Update failed' });
-  }
-};
-
-// --- Delete Question ---
-export const deleteQuestion = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.userId;
-
-    const question = await Question.findOne({ questionId: id });
-    if (!question) return res.status(404).json({ message: 'Question not found' });
-    if (question.uploadedBy.toString() !== userId) return res.status(403).json({ message: 'Unauthorized' });
-
-    // Delete question directory and files
-    try {
-      await fs.rm(question.directoryPath, { recursive: true, force: true });
-      console.log(`Deleted directory: ${question.directoryPath}`);
-    } catch (fsErr) {
-      console.warn(`Failed to delete directory ${question.directoryPath}:`, fsErr.message);
-      return res.status(500).json({ message: 'Failed to delete question files' });
-    }
-
-    await question.deleteOne();
-    res.status(200).json({ message: 'Question and files deleted successfully' });
-  } catch (error) {
-    console.error('Deletion error:', error);
-    res.status(500).json({ message: 'Deletion failed' });
-  }
-};
-
 // --- Get Question Details ---
+const getDescriptionFromS3 = async (s3Key) => {
+  const command = new GetObjectCommand({ Bucket: BUCKET, Key: s3Key });
+  const response = await s3Client.send(command);
+  return await streamToString(response.Body);
+};
+
 export const getQuestionDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -145,10 +86,9 @@ export const getQuestionDetails = async (req, res) => {
     let description = 'No description';
     if (question.descriptionFile) {
       try {
-        const descPath = path.join(question.directoryPath, question.descriptionFile);
-        description = await fs.readFile(descPath, 'utf-8');
+        description = await getDescriptionFromS3(question.descriptionFile);
       } catch (e) {
-        console.warn(`Could not read description file: ${e.message}`);
+        console.warn(`Could not read description from S3: ${e.message}`);
       }
     }
 
@@ -162,33 +102,48 @@ export const getQuestionDetails = async (req, res) => {
   }
 };
 
-// --- Get Logged-In User's Uploaded Questions ---
+// --- Delete Question and S3 Files ---
+const deleteS3Folder = async (prefix) => {
+  const listed = await s3Client.send(new ListObjectsV2Command({ Bucket: BUCKET, Prefix: prefix }));
+  if (!listed.Contents || listed.Contents.length === 0) return;
+  for (const item of listed.Contents) {
+    await s3Client.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: item.Key }));
+  }
+};
+
+export const deleteQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    const question = await Question.findOne({ questionId: id });
+    if (!question) return res.status(404).json({ message: 'Question not found' });
+    if (question.uploadedBy.toString() !== userId) return res.status(403).json({ message: 'Unauthorized' });
+
+    await deleteS3Folder(`questions/${id}/`);
+    await question.deleteOne();
+    res.status(200).json({ message: 'Question and files deleted successfully' });
+  } catch (error) {
+    console.error('Deletion error:', error);
+    res.status(500).json({ message: 'Deletion failed' });
+  }
+};
+
+// --- User's Uploaded Questions ---
 export const getUserQuestions = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const questions = await Question.find(
-      { uploadedBy: userId },
-      {
-        _id: 0,
-        questionId: 1,
-        title: 1,
-        difficulty: 1,
-        tags: 1,
-        descriptionFile: 1,
-        directoryPath: 1,
-      }
-    );
+    const questions = await Question.find({ uploadedBy: userId });
 
-    const questionsWithDesc = await Promise.all(
+    const results = await Promise.all(
       questions.map(async (q) => {
-        let description = 'No description available.';
+        let description = 'No description';
         if (q.descriptionFile) {
           try {
-            const descPath = path.join(q.directoryPath, q.descriptionFile);
-            let fullDesc = await fs.readFile(descPath, 'utf-8');
-            description = fullDesc.split('Input Format:')[0].trim();
+            const full = await getDescriptionFromS3(q.descriptionFile);
+            description = full.split('Input Format:')[0].trim();
           } catch (err) {
-            console.warn(`Failed to read description file: ${err.message}`);
+            console.warn(`Could not fetch description: ${err.message}`);
           }
         }
         return {
@@ -196,37 +151,28 @@ export const getUserQuestions = async (req, res) => {
           title: q.title,
           difficulty: q.difficulty,
           tags: q.tags,
-          description,
+          description
         };
       })
     );
 
-    res.json(questionsWithDesc);
+    res.json(results);
   } catch (error) {
     console.error('Error fetching user questions:', error);
     res.status(500).json({ message: 'Failed to fetch questions' });
   }
 };
 
-// --- Get All Questions with Optional Solved Status ---
+// --- Get All Questions (with Solved Status if Authenticated) ---
 export const getQuestionList = async (req, res) => {
   try {
     const userId = req.user?.userId;
-
-    const questions = await Question.find({}, {
-      _id: 0,
-      questionId: 1,
-      title: 1,
-      difficulty: 1,
-      tags: 1,
-    });
+    const questions = await Question.find({}, { _id: 0, questionId: 1, title: 1, difficulty: 1, tags: 1 });
 
     let solvedIds = new Set();
     if (userId) {
       const user = await User.findById(userId).select('solvedQuestions');
-      if (user && user.solvedQuestions) {
-        solvedIds = new Set(user.solvedQuestions);
-      }
+      if (user?.solvedQuestions) solvedIds = new Set(user.solvedQuestions);
     }
 
     const formatted = questions.map((q) => ({
@@ -241,5 +187,64 @@ export const getQuestionList = async (req, res) => {
   } catch (error) {
     console.error('List error:', error);
     res.status(500).json({ message: 'Failed to fetch questions' });
+  }
+};
+
+
+import path from 'path';
+import fs from 'fs';
+
+export const updateQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    const question = await Question.findOne({ questionId: id });
+    if (!question) return res.status(404).json({ message: 'Question not found' });
+    if (question.uploadedBy.toString() !== userId) return res.status(403).json({ message: 'Unauthorized' });
+
+    const { title, difficulty, tags } = req.body;
+    if (title) question.title = title;
+    if (difficulty) question.difficulty = difficulty.toLowerCase();
+    if (tags) {
+      const tagsArray = typeof tags === 'string' ? tags.split(',').map(t => t.trim()) : tags;
+      question.tags = tagsArray;
+    }
+
+    // --- Update description if a new file is uploaded
+    if (req.files?.description?.length) {
+      const descFile = req.files.description[0];
+      const descExt = path.extname(descFile.originalname);
+      const descriptionS3Key = `questions/${id}/${uuidv4()}${descExt}`;
+      await uploadFileToS3(descFile.path, descriptionS3Key);
+      question.descriptionFile = descriptionS3Key;
+    }
+
+    // --- Optionally update test cases
+    if (req.files?.inputFiles && req.files?.outputFiles) {
+      const inputFiles = req.files.inputFiles;
+      const outputFiles = req.files.outputFiles;
+
+      if (inputFiles.length !== outputFiles.length) {
+        return res.status(400).json({ message: 'Input/output file count mismatch' });
+      }
+
+      const testCases = [];
+      for (let i = 0; i < inputFiles.length; i++) {
+        const inputKey = `questions/${id}/${uuidv4()}${path.extname(inputFiles[i].originalname)}`;
+        const outputKey = `questions/${id}/${uuidv4()}${path.extname(outputFiles[i].originalname)}`;
+        await uploadFileToS3(inputFiles[i].path, inputKey);
+        await uploadFileToS3(outputFiles[i].path, outputKey);
+        testCases.push({ inputFile: inputKey, outputFile: outputKey });
+      }
+
+      question.testCases = testCases;
+    }
+
+    await question.save();
+    res.json({ message: 'Question updated successfully' });
+  } catch (error) {
+    console.error('Update error:', error);
+    res.status(500).json({ message: 'Failed to update question' });
   }
 };
