@@ -1,10 +1,11 @@
-// App.jsx
+// src/App.jsx
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { checkAuth } from './service/api.js';
 
 import Signup from './pages/signup.jsx';
-import ForgotPassword from './pages/ForgotPassword.jsx';
 import Signin from './pages/signin.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
 import Dashboard from './pages/dashboard.jsx';
 import QuestionsList from './pages/QuestionsList.jsx';
 import QuestionDetail from './pages/QuestionDetail.jsx';
@@ -12,7 +13,6 @@ import AddQuestion from './pages/AddQuestion.jsx';
 import AllQuestions from './pages/AllQuestions.jsx';
 
 import Navbar from './components/Navbar.jsx';
-import { checkAuth } from './service/api.js';
 import './App.css';
 
 function App() {
@@ -26,16 +26,14 @@ function App() {
       const token = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
 
-      // 🟢 Show user from localStorage immediately (for handle)
       if (token && storedUser) {
         setUser(JSON.parse(storedUser));
       }
 
       if (token) {
         try {
-          const userData = await checkAuth(); // ✅ Already the user object
-setUser(userData);
-
+          const userData = await checkAuth();
+          setUser(userData);
           localStorage.setItem('user', JSON.stringify(userData));
         } catch (err) {
           console.error("Auth check failed", err.message);
@@ -43,8 +41,6 @@ setUser(userData);
           localStorage.removeItem('user');
           setUser(null);
         }
-      } else if (storedUser) {
-        setUser(JSON.parse(storedUser));
       }
 
       setAuthLoading(false);
@@ -52,8 +48,7 @@ setUser(userData);
 
     checkUser();
 
-    const linksShown = localStorage.getItem('welcomeLinksShown');
-    if (!linksShown) {
+    if (!localStorage.getItem('welcomeLinksShown')) {
       setShowLinks(true);
       localStorage.setItem('welcomeLinksShown', 'true');
     }
@@ -66,40 +61,49 @@ setUser(userData);
     navigate('/');
   };
 
-  useEffect(() => {
-    console.log('Current user:', user);
-  }, [user]);
-
   if (authLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="h-screen flex items-center justify-center bg-slate-900 text-white text-xl font-semibold">
+        Checking Authentication...
+      </div>
+    );
   }
 
   return (
-    <div className="app-wrapper">
+    <div className="app-wrapper min-h-screen bg-slate-900 text-slate-100">
       <Navbar user={user} logout={logout} />
+
       <Routes>
         <Route
           path="/"
           element={
-            user ? (
-              <div style={{ padding: '2rem', textAlign: 'center' }}>
-                <h1>Welcome, {user.handle || user.email}!</h1>
-                <p>This is the front page.</p>
-                <p>Click your handle in the top right to visit your dashboard.</p>
+            <div className="flex items-center justify-center min-h-[calc(100vh-70px)] px-4">
+              <div className="welcome-card bg-slate-800 p-10 rounded-xl shadow-lg text-center max-w-xl w-full border border-slate-600">
+                <h1 className="text-3xl font-bold mb-4">
+                  {user ? `Welcome, ${user.handle || user.email}!` : 'Welcome to Online Judge!'}
+                </h1>
+                <p className="text-slate-300">
+                  {user ? (
+                    'Click your handle in the top right to visit your dashboard.'
+                  ) : showLinks ? (
+                    <>
+                      Please{' '}
+                      <Link to="/signin" className="text-sky-400 underline">
+                        Sign In
+                      </Link>{' '}
+                      or{' '}
+                      <Link to="/signup" className="text-sky-400 underline">
+                        Sign Up
+                      </Link>{' '}
+                      to continue.
+                    </>
+                  ) : null}
+                </p>
               </div>
-            ) : (
-              <div style={{ padding: '2rem', textAlign: 'center' }}>
-                <h1>Welcome to Online Judge!</h1>
-                {showLinks && (
-                  <p>
-                    Please <Link to="/signin">Sign In</Link> or{' '}
-                    <Link to="/signup">Sign Up</Link> to continue.
-                  </p>
-                )}
-              </div>
-            )
+            </div>
           }
         />
+
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin onSigninSuccess={setUser} />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -115,8 +119,8 @@ setUser(userData);
               user.isAdmin ? (
                 <AddQuestion />
               ) : (
-                <div className="access-denied">
-                  <h2>Access Denied</h2>
+                <div className="text-center py-20 text-red-400 font-semibold">
+                  <h2 className="text-2xl mb-2">Access Denied 🚫</h2>
                   <p>You do not have permission to view this page.</p>
                 </div>
               )

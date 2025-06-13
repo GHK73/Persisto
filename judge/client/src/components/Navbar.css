@@ -1,65 +1,47 @@
 .navbar {
-  width: 100%; /* Ensure the navbar takes full width */
-  position: fixed; /* Keep it fixed at the top */
-  top: 0; /* Align to the top */
-  left: 0; /* Align to the left */
-  z-index: 1000; /* Ensure it stays above other content */
-  background-color: #4a90e2; /* Blue background for the navbar */
-  padding: 10px 20px; /* Padding for the navbar */
-  display: flex; /* Use flexbox for layout */
-  justify-content: space-between; /* Space between left and right sections */
-  align-items: center; /* Center items vertically */
-}
-
-.navbar-content {
-  display: flex;
-  width: 100%; /* Full width */
-  justify-content: space-between; /* Space between left and right sections */
-}
-
-.navbar-left {
-  display: flex;
-  align-items: center; /* Center items vertically */
+  background-color: #2563eb; /* Slightly deeper blue for richness */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 12px 32px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .navbar-logo {
-  font-size: 1.5rem; /* Logo font size */
-  color: white; /* Logo color */
-  text-decoration: none; /* Remove underline */
-  margin-right: 20px; /* Space between logo and questions link */
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ffffff;
+  letter-spacing: 0.5px;
 }
 
 .navbar-link {
-  color: white; /* Link color */
-  text-decoration: none; /* Remove underline */
-  margin-left: 20px; /* Space between links */
-  font-weight: 500; /* Slightly bolder font */
-  transition: color 0.3s; /* Smooth color transition */
+  font-size: 1rem;
+  margin-left: 24px;
+  color: #f1f5f9;
+  transition: all 0.25s ease;
 }
 
 .navbar-link:hover {
-  color: #f0f0f0; /* Lighter color on hover */
-}
-
-.navbar-right {
-  display: flex;
-  align-items: center; /* Center items vertically */
+  color: #e0f2fe;
+  text-shadow: 0 0 5px rgba(56, 189, 248, 0.4);
 }
 
 .navbar-button {
-  background: none; /* No background */
-  border: none; /* No border */
-  color: white; /* Button text color */
-  font-size: 1rem; /* Button font size */
-  margin-left: 20px; /* Space between buttons */
-  cursor: pointer; /* Pointer cursor on hover */
-  transition: color 0.3s; /* Smooth color transition */
+  font-size: 1rem;
+  margin-left: 20px;
+  color: #f8fafc;
+  padding: 6px 12px;
+  background-color: transparent;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
 }
 
 .navbar-button:hover {
-  color: #f0f0f0; /* Lighter color on hover */
+  color: #e0f2fe;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .user-email {
-  font-weight: bold; /* Bold font for user email */
+  font-weight: 600;
+  color: #ffffff;
 }

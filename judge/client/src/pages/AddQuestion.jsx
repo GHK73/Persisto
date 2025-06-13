@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addQuestion } from '../service/api';
-import '../App.css';
+import './AddQuestion.css';
 
 const allTags = [
   "2-sat", "binary search", "bitmasks", "brute force", "chinese remainder theorem",

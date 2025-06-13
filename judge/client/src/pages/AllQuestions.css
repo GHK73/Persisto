@@ -1,80 +1,100 @@
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
 .questions-container {
-  padding: 20px;
-  background-color: #f4f4f4; /* Light background for contrast */
+  padding: 30px 60px;
+  background-color: #0f172a;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-h2 {
-  font-size: 2rem;
-  color: #333; /* Dark text for better readability */
-  margin-bottom: 20px;
-}
-
-.all-questions-wrapper {
+.questions-header {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
 }
+
+.questions-header h2 {
+  font-size: 2rem;
+  color: #fff;
+}
+
+/* Removed .add-problem-btn */
 
 .horizontal-question-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
+  width: 100%;
 }
-
 
 .question-link {
   text-decoration: none;
-  width: 100%; /* full width */
+  width: 100%;
 }
 
 .question-card {
-  width: 100%;
-  background-color: #ffffff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
   display: flex;
-  flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  min-height: 90px;
+  background-color: #1e293b;
+  padding: 16px 20px;
+  border-radius: 12px;
+  transition: transform 0.2s;
+  border: 1px solid #334155;
+  width: 100%;
 }
 
 .question-card:hover {
-  transform: translateY(-2px); /* Lift effect on hover */
-}
-
-.question-left {
-  flex-grow: 1; /* Take available horizontal space */
-  min-width: 0; /* Prevent overflow when long titles */
+  transform: translateY(-2px);
 }
 
 .question-left h3 {
-  margin: 0 0 5px 0;
-  font-size: 1.25rem;
-  color: #222;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin: 0;
+  color: #fff;
+  font-size: 1.2rem;
 }
 
 .tags {
-  color: #777; /* Lighter color for tags */
-  font-size: 0.9rem; /* Smaller font size for tags */
-  margin-top: 5px; /* Space above tags */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
 }
 
-.question-right {
-  text-align: right; /* Align status text to the right */
-  margin-left: 15px;
-  flex-shrink: 0; /* Prevent shrinking */
-  white-space: nowrap;
+.tag {
+  background-color: #334155;
+  color: #f1f5f9;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.difficulty-badge {
+  font-size: 0.75rem;
+  padding: 6px 12px;
   font-weight: 600;
-  font-size: 0.95rem;
-  color: #555;
+  border-radius: 999px;
+  text-transform: capitalize;
 }
 
+.difficulty-badge.easy {
+  background-color: #22c55e;
+  color: #fff;
+}
+
+.difficulty-badge.medium {
+  background-color: #facc15;
+  color: #000;
+}
+
+.difficulty-badge.hard {
+  background-color: #ef4444;
+  color: #fff;
+}

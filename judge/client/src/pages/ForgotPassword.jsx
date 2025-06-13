@@ -5,7 +5,7 @@ import {
   verifyEmailOtp,
   resetPassword,
 } from '../service/api';
-import '../App.css';
+import './signup.css';
 
 function ForgotPassword() {
   const [email, setEmail] = useState('');

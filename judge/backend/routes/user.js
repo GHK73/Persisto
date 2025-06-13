@@ -1,84 +1,54 @@
-// routes/user.js
 import express from 'express';
 import multer from 'multer';
-import User from '../models/file.js'; // your model filename
-import path from 'path';
-import fs from 'fs';
+import User from '../models/file.js';
+import { v4 as uuidv4 } from 'uuid';
+import { uploadFileToS3, deleteFileFromS3, getSignedUrlForS3 } from '../utils/s3Uploader.js';
+import dotenv from 'dotenv';
 
+dotenv.config();
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
-// Ensure upload directory exists
-const uploadDir = 'uploads/profile-pics';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${file.fieldname}${ext}`);
-  }
-});
-
-const upload = multer({ storage });
-
-/**
- * @route POST /users/:handle/profile-pic
- * @desc Upload or update profile picture by handle (username)
- */
 router.post('/:handle/profile-pic', upload.single('profilePic'), async (req, res) => {
   const { handle } = req.params;
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
-  }
+  const file = req.file;
+
+  if (!file) return res.status(400).json({ error: 'No file uploaded' });
 
   try {
     const user = await User.findOne({ handle });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Delete old profile picture if exists
     if (user.profilePic) {
-      const oldPath = path.join(process.cwd(), user.profilePic.replace(/^\//, ''));
-      try {
-        await fs.promises.access(oldPath, fs.constants.F_OK);
-        await fs.promises.unlink(oldPath);
-      } catch (err) {
-        if (err.code === 'ENOENT') {
-          await User.updateOne({ handle }, { $unset: { profilePic: 1 } });
-        }
-      }
+      await deleteFileFromS3(user.profilePic);
     }
 
-    // Save new profile picture path
-    user.profilePic = `/uploads/profile-pics/${req.file.filename}`;
+    const ext = file.originalname.split('.').pop();
+    const key = `profile-pics/${uuidv4()}.${ext}`;
+    await uploadFileToS3(file.buffer, key, file.mimetype);
+
+    user.profilePic = key;
     await user.save();
 
-    res.json({ profilePic: user.profilePic });
+    const signedUrl = await getSignedUrlForS3(key);
+    res.status(200).json({ profilePic: signedUrl });
   } catch (err) {
-    console.error('Upload error:', err);
+    console.error('S3 upload error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-/**
- * @route GET /users/:handle/stats
- * @desc Return questions solved stats by handle (username)
- */
 router.get('/:handle/stats', async (req, res) => {
   const { handle } = req.params;
 
   try {
     const user = await User.findOne({ handle });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ error: 'User not found' });
 
     const questionsDone = Array.isArray(user.solvedQuestions) ? user.solvedQuestions.length : 0;
+    const profilePicUrl = user.profilePic ? await getSignedUrlForS3(user.profilePic) : null;
 
-    res.json({ questionsDone });
+    res.status(200).json({ questionsDone, profilePic: profilePicUrl });
   } catch (err) {
     console.error('Stats fetch error:', err);
     res.status(500).json({ error: 'Internal server error' });

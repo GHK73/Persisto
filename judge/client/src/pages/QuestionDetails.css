@@ -1,27 +1,63 @@
+/* Whole layout background */
 .question-details-container {
   display: flex;
   height: 100vh;
-  width: 100vw; /* full viewport width */
+  width: 100vw;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  background-color: #eaeaea; /* Light gray background */
+  background-color: #f7fafc; /* Light pastel gray-blue */
+}
+.question-description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #334155;
+  padding: 1rem;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  white-space: pre-wrap;
 }
 
+.question-description h1,
+.question-description h2,
+.question-description h3 {
+  color: #1e293b;
+  margin: 1rem 0 0.5rem;
+}
+
+.question-description ul {
+  padding-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.question-description code {
+  background-color: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.question-description pre {
+  background-color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+/* Left and Right panes */
 .left-pane, .right-pane {
-  width: 50%; /* half width each */
-  border-radius: 0; /* no border radius to align edges */
-  padding: 24px; /* consistent padding inside */
+  width: 50%;
+  padding: 24px;
   overflow-y: auto;
-  background: #ffffff; /* White background for content */
-  box-shadow: none; /* Remove shadows for clean split */
-  box-sizing: border-box;
+  background-color: #ffffff; /* Clean white cards */
   border: none;
+  box-sizing: border-box;
 }
 
+/* Left (question) */
 .question-title {
-  font-size: 1.5rem;
-  color: #333; /* Dark text for better readability */
+  font-size: 1.8rem;
+  color: #1e293b; /* Slate 800 */
   margin-bottom: 10px;
 }
 
@@ -29,17 +65,18 @@
   white-space: pre-wrap;
   font-family: 'Courier New', Courier, monospace;
   font-size: 1rem;
-  line-height: 1.5;
-  color: #555; /* Slightly lighter text for description */
+  line-height: 1.6;
+  color: #475569; /* Slate 600 */
 }
 
+/* Right (code section) */
 .right-pane {
   display: flex;
   flex-direction: column;
   padding-left: 24px;
-  box-sizing: border-box;
 }
 
+/* Language selector */
 .language-selector {
   display: flex;
   align-items: center;
@@ -47,37 +84,29 @@
 }
 
 .language-label {
-  font-weight: bold;
+  font-weight: 600;
   margin-right: 10px;
+  color: #1e293b;
 }
 
 .language-dropdown {
   padding: 8px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  background-color: #f9f9f9; /* Light background for dropdown */
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #0f172a;
 }
 
+/* Monaco Editor Container */
 .code-editor-container {
   flex-grow: 1;
   margin-bottom: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
   overflow: hidden;
 }
 
-.code-editor {
-  width: 100%;
-  height: 300px;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 14px;
-  padding: 1rem;
-  border: none;
-  resize: none;
-  outline: none;
-  background-color: #f9f9f9; /* Light background for code editor */
-}
-
+/* Input Section */
 .input-section {
   display: flex;
   flex-direction: column;
@@ -85,71 +114,99 @@
 }
 
 .input-label {
-  font-weight: bold;
-  margin-bottom: 5px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #1e293b;
 }
 
 .input-box {
   height: 80px;
-  padding: 8px;
+  padding: 10px;
   font-family: 'Courier New', Courier, monospace;
   resize: vertical;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #f9f9f9; /* Light background for input box */
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background-color: #f8fafc;
+  color: #0f172a;
 }
 
+/* Buttons */
 .button-group {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
 }
 
 .btn-run, .btn-submit {
   padding: 10px 20px;
-  font-weight: bold;
-  cursor: pointer;
+  font-weight: 600;
   border: none;
-  border-radius: 4px;
-  color: white;
-  transition: background-color 0.3s ease;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s ease;
 }
 
 .btn-run {
-  background-color: #4caf50; /* Green for run button */
+  background-color: #10b981; /* Emerald 500 */
+  color: white;
 }
 
 .btn-run:hover {
-  background-color: #45a049; /* Darker green on hover */
+  background-color: #059669;
 }
 
 .btn-submit {
-  background-color: #2196f3; /* Blue for submit button */
+  background-color: #3b82f6; /* Blue 500 */
+  color: white;
 }
 
 .btn-submit:hover {
-  background-color: #1976d2; /* Darker blue on hover */
+  background-color: #2563eb;
 }
 
+/* Output Display */
 .output-box {
   min-height: 100px;
-  background-color: #222;
-  color: #0f0;
+  background-color: #f1f5f9; /* Slate-100 */
+  color: #0f172a;
   font-family: 'Courier New', Courier, monospace;
   padding: 1rem;
-  border-radius: 4px;
+  border-radius: 6px;
   white-space: pre-wrap;
   overflow-y: auto;
   margin-top: 1rem;
+  border: 1px solid #cbd5e1;
 }
 
+/* Errors */
 .output-error {
-  color: #f00; /* Red for error messages */
+  color: #dc2626; /* Red-600 */
 }
 
 .error-message {
-  color: #f00; /* Red for error messages */
+  color: #dc2626;
   font-weight: bold;
   text-align: center;
 }
+/* Scrollable description */
+.question-description {
+  max-height: 70vh;
+  overflow-y: auto;
+}
 
+/* Editor grows fully */
+.code-editor-container {
+  flex: 1;
+  min-height: 300px;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Allow panes to scroll independently */
+.left-pane,
+.right-pane {
+  height: 100vh;
+  overflow-y: auto;
+}

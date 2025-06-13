@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getQuestionById, runCodeApi, submitCodeApi } from '../service/api';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
+import { FaCode } from 'react-icons/fa';
 import '../App.css';
 import './QuestionDetails.css';
 
@@ -24,10 +26,9 @@ export default function QuestionDetail() {
     cpp: 'cpp',
     c: 'c',
     python: 'python',
-    java: 'java'
+    java: 'java',
   };
 
-  // Auth check on mount
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -35,12 +36,11 @@ export default function QuestionDetail() {
       return;
     }
 
-axios.get('http://localhost:8000/check-auth', {
-  headers: { Authorization: `Bearer ${token}` }
-})
-
+    axios
+      .get('http://localhost:8000/check-auth', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then(() => {
-        // Auth successful, load question
         fetchQuestion();
       })
       .catch(() => {
@@ -93,7 +93,9 @@ axios.get('http://localhost:8000/check-auth', {
     <div className="question-details-container">
       <div className="left-pane">
         <h2 className="question-title">{question.title}</h2>
-        <pre className="question-description">{question.description || 'No description available.'}</pre>
+        <div className="question-description">
+          <ReactMarkdown>{question.description || 'No description available.'}</ReactMarkdown>
+        </div>
       </div>
 
       <div className="right-pane">
@@ -113,12 +115,19 @@ axios.get('http://localhost:8000/check-auth', {
         </div>
 
         <div className="code-editor-container">
+          <div style={{ marginBottom: '6px', color: '#475569', fontWeight: '600' }}>
+            <FaCode style={{ marginRight: '6px' }} /> Code Editor
+          </div>
           <Editor
-            height="300px"
+            height="100%"
             language={languageMap[language]}
             theme="vs-dark"
             value={code}
             onChange={(value) => setCode(value || '')}
+            options={{
+              scrollBeyondLastLine: false,
+              automaticLayout: true,
+            }}
           />
         </div>
 

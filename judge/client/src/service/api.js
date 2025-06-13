@@ -1,12 +1,10 @@
-// service/api.js
-
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
 const api = axios.create({ baseURL: BASE_URL });
 
-// Attach token to request headers except for public routes
+// Attach token to headers
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -30,7 +28,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-/* ========== AUTH & USER ========== */
+// Auth + User
 export const requestSignupOtp = (email) =>
   api.post('/signup/request-otp', { email });
 
@@ -41,7 +39,6 @@ export const completeSignup = (data) => api.post('/signup/complete', data);
 
 export const signinUser = (data) => api.post('/signin', data);
 
-// ✅ FIXED: Extract only user object directly
 export const checkAuth = () =>
   api.get('/check-auth').then((res) => res.data.user);
 
@@ -64,7 +61,7 @@ export const updateProfilePicture = (handle, formData) =>
 export const getUserStats = (handle) =>
   api.get(`/users/${handle}/stats`).then((res) => res.data);
 
-/* ========== QUESTIONS ========== */
+// Questions
 export const getAllQuestions = () =>
   api.get('/questions').then((res) => res.data);
 
@@ -87,7 +84,7 @@ export const deleteQuestion = (id) =>
 export const getUserQuestions = () =>
   api.get('/questions/my-questions').then((res) => res.data);
 
-/* ========== CODE RUN/SUBMIT ========== */
+// Code Execution
 export const runCodeApi = (data) =>
   api.post('/code/run', data).then((res) => res.data);
 

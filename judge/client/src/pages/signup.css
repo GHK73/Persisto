@@ -4,7 +4,7 @@
   justify-content: center;
   align-items: center;
   padding: 40px 20px;
-  background-color: #f4f4f4; /* Light background for contrast */
+  background-color: #eef4fb; /* Soft blue background for modern contrast */
 }
 
 .form-box {
@@ -62,8 +62,8 @@
 .btn-submit {
   width: 100%;
   padding: 14px 0;
-  background-color: #6c63ff; /* Purple background for submit button */
-  color: #fff;
+  background-color: #0052cc; /* Deeper blue for higher contrast */
+  color: #ffffff;
   border: none;
   border-radius: 8px;
   font-size: 18px;
@@ -73,36 +73,23 @@
 }
 
 .btn-submit:hover {
-  background-color: #5548c8; /* Darker purple on hover */
-}
-
-.error {
-  color: #e74c3c;
-  font-weight: 500;
-  font-size: 14px;
-  text-align: center;
-  margin-top: 10px;
-}
-
-.success {
-  color: #27ae60;
-  font-weight: 500;
-  font-size: 14px;
-  text-align: center;
-  margin-top: 10px;
+  background-color: #003d99; /* Darker blue on hover */
 }
 
 .form-footer {
   margin-top: 20px;
   text-align: center;
-  color: #555;
+  color: #222222;
+  font-size: 15px;
 }
 
 .form-footer a {
-  color: #6c63ff;
+  color: #0052cc;
+  font-weight: 600;
   text-decoration: none;
 }
 
 .form-footer a:hover {
+  color: #003d99;
   text-decoration: underline;
 }
