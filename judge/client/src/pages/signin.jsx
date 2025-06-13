@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { signinUser } from '../service/api';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import './signin.css'; // Updated to import the correct CSS file
+import './signup.css'; // Updated to import the correct CSS file
 
 function Signin({ onSigninSuccess }) {
   const [formData, setFormData] = useState({ login: '', password: '' });
