@@ -5,7 +5,7 @@ import {
   completeSignup,
 } from '../service/api';
 import { Link, useNavigate } from 'react-router-dom';
-import './Signup.css'; // Import the CSS file for styling
+import './signup.css'; // Import the CSS file for styling
 
 function Signup() {
   const navigate = useNavigate();
