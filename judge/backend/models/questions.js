@@ -3,11 +3,11 @@ import mongoose from 'mongoose';
 const testCaseSchema = new mongoose.Schema({
   inputFileKey: {
     type: String,
-    required: true // S3 object key for input file
+    required: true, // S3 key
   },
   outputFileKey: {
     type: String,
-    required: true // S3 object key for output file
+    required: true, // S3 key
   }
 });
 
@@ -15,33 +15,37 @@ const QuestionSchema = new mongoose.Schema({
   questionId: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
   },
   title: {
     type: String,
-    required: true
+    required: true,
   },
   difficulty: {
     type: String,
     enum: ['easy', 'medium', 'hard'],
-    required: true
+    required: true,
   },
   uploadedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
   },
   testCases: {
     type: [testCaseSchema],
-    default: []
+    default: [],
   },
   tags: {
     type: [String],
-    default: []
+    default: [],
   },
   descriptionFileKey: {
     type: String,
-    required: true // S3 object key for description
+    required: true, // Used to fetch from S3
+  },
+  descriptionFile: {
+    type: String, // Original file name for reference
+    required: false,
   }
 });
 

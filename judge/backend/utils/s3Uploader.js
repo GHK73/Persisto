@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
+const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
 export const uploadFileToS3 = async (localFilePath, key) => {
   const fileStream = fs.createReadStream(localFilePath);

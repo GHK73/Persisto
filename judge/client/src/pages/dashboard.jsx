@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { updateProfilePicture, getUserStats } from '../service/api.js';
+import axios from 'axios';
 import '../App.css';
 
 const BACKEND_BASE_URL = 'http://localhost:8000';
@@ -9,20 +11,33 @@ function Dashboard({ user }) {
   const [uploading, setUploading] = useState(false);
   const [questionsDone, setQuestionsDone] = useState(0);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        if (!user?.handle) return;
-        const res = await getUserStats(user.handle);  // use handle here
-        setQuestionsDone(res.questionsDone || 0);
-      } catch (err) {
-        console.error('Error fetching stats:', err);
-        setError('Failed to fetch user statistics');
-      }
-    };
-    fetchStats();
+    const token = localStorage.getItem('token');
+    if (!token) return navigate('/signin');
+
+    axios.get('http://localhost:8000/protected', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(() => {
+        if (user?.handle) fetchStats(user.handle);
+      })
+      .catch(() => {
+        localStorage.removeItem('token');
+        navigate('/signin');
+      });
   }, [user?.handle]);
+
+  const fetchStats = async (handle) => {
+    try {
+      const res = await getUserStats(handle);
+      setQuestionsDone(res.questionsDone || 0);
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+      setError('Failed to fetch user statistics');
+    }
+  };
 
   const getFullProfilePicUrl = (picPath) => {
     if (!picPath) return '';
@@ -40,7 +55,7 @@ function Dashboard({ user }) {
     try {
       const formData = new FormData();
       formData.append('profilePic', file);
-      const res = await updateProfilePicture(user.handle, formData);  // use handle here
+      const res = await updateProfilePicture(user.handle, formData);
       setProfilePic(res.profilePic);
     } catch (err) {
       console.error('Error uploading profile picture:', err);
@@ -66,11 +81,7 @@ function Dashboard({ user }) {
         <div className="user-info">
           <div className="profile-pic-wrapper">
             {profilePic ? (
-              <img
-                src={getFullProfilePicUrl(profilePic)}
-                alt="Profile"
-                className="profile-pic"
-              />
+              <img src={getFullProfilePicUrl(profilePic)} alt="Profile" className="profile-pic" />
             ) : (
               <div className="no-pic-placeholder">No Profile Picture</div>
             )}

@@ -100,14 +100,16 @@ export const signin = async (req, res) => {
     }
 
     const token = jwt.sign(
-      {
-        userId: user._id,
-        email: user.email,
-        isAdmin: user.isAdmin, // Include in token
-      },
-      JWT_SECRET,
-      { expiresIn: '2h' }
-    );
+  {
+    id: user.uniqueId,          
+    email: user.email,
+    handle: user.handle,
+    isAdmin: user.isAdmin,
+  },
+  JWT_SECRET,
+  { expiresIn: '2h' }
+);
+
 
     res.status(200).json({
       message: 'Login successful!',
@@ -162,7 +164,8 @@ export const resetPassword = async (req, res) => {
     await User.findOneAndUpdate({ email }, { password: hashedPassword });
 
     // Clean up used OTPs
-    await Otp.deleteMany({ email, purpose: 'forgot-password' });
+    await Otp.deleteMany({ email, purpose: 'forgot_password' });
+
 
     res.status(200).json({ message: 'Password reset successful' });
   } catch (error) {

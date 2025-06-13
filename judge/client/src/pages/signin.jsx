@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { signinUser  } from '../service/api';
+import { signinUser } from '../service/api';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import '../App.css';
 
@@ -10,6 +10,7 @@ function Signin({ onSigninSuccess }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Redirect path after login
   const from = location.state?.from?.pathname || '/';
 
   const handleChange = (e) => {
@@ -20,14 +21,21 @@ function Signin({ onSigninSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await signinUser (formData);
+      const res = await signinUser(formData);
+
+      // Save token
       localStorage.setItem('token', res.data.token);
 
-      onSigninSuccess({
+      // Save user info
+      const user = {
         handle: res.data.handle,
         email: res.data.email,
         isAdmin: res.data.isAdmin,
-      });
+      };
+      localStorage.setItem('user', JSON.stringify(user));
+
+      // Update App state
+      onSigninSuccess(user);
 
       setSuccessMessage('Login successful!');
       navigate(from, { replace: true });

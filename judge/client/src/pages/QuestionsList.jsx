@@ -1,29 +1,41 @@
 import React, { useEffect, useState } from 'react';
-import { getUserQuestions, deleteQuestion } from '../service/api.js';
+import { useNavigate } from 'react-router-dom';
+import { getUserQuestions, deleteQuestion, checkAuth } from '../service/api.js';
 import "../App.css";
 
 const QuestionList = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const res = await getUserQuestions();
-        console.log('Fetched questions:', res);
-        if (Array.isArray(res)) {
-          setQuestions(res);
-        } else {
-          console.error('Expected an array but got:', res);
-        }
-      } catch (error) {
-        console.error('Error loading questions:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchQuestions();
+    const token = localStorage.getItem('token');
+    if (!token) return navigate('/signin');
+
+    // Use centralized auth check
+    checkAuth()
+      .then(() => fetchQuestions())
+      .catch((err) => {
+        console.error("Auth check failed:", err.response?.data || err.message);
+        localStorage.removeItem('token');
+        navigate('/signin');
+      });
   }, []);
+
+  const fetchQuestions = async () => {
+    try {
+      const res = await getUserQuestions();
+      if (Array.isArray(res)) {
+        setQuestions(res);
+      } else {
+        console.error('Expected an array but got:', res);
+      }
+    } catch (error) {
+      console.error('Error loading questions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDelete = async (questionId) => {
     if (!window.confirm('Are you sure you want to delete this question?')) return;
@@ -36,7 +48,7 @@ const QuestionList = () => {
   };
 
   const handleUpdate = (questionId) => {
-    alert(`Redirect to update page for question ID: ${questionId}`);
+    navigate(`/update-question/${questionId}`);
   };
 
   if (loading) return <div className="questions-list-container">Loading...</div>;
@@ -50,26 +62,15 @@ const QuestionList = () => {
         <ul className="questions-list">
           {questions.map(q => (
             <li key={q.questionId} className="question-list-item flex justify-between items-center">
-  <div className="question-info">
-    <span className="question-link">{q.title}</span>
-    <span className="difficulty-tag">{q.difficulty}</span>
-  </div>
-  <div className="button-group">
-    <button
-      onClick={() => handleUpdate(q.questionId)}
-      className="btn-edit"
-    >
-      Edit
-    </button>
-    <button
-      onClick={() => handleDelete(q.questionId)}
-      className="btn-delete"
-    >
-      Delete
-    </button>
-  </div>
-</li>
-
+              <div className="question-info">
+                <span className="question-link">{q.title}</span>
+                <span className="difficulty-tag">{q.difficulty}</span>
+              </div>
+              <div className="button-group">
+                <button onClick={() => handleUpdate(q.questionId)} className="btn-edit">Edit</button>
+                <button onClick={() => handleDelete(q.questionId)} className="btn-delete">Delete</button>
+              </div>
+            </li>
           ))}
         </ul>
       )}

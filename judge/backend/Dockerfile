@@ -2,11 +2,13 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-RUN apk update && apk add --no-cache g++
+RUN apk update && apk add --no-cache g++ make python3
 
-COPY . .
+COPY package*.json ./
 
 RUN npm install
+
+COPY . .
 
 EXPOSE 8000
 

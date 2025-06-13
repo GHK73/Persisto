@@ -1,35 +1,64 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { getQuestionById, runCodeApi, submitCodeApi } from '../service/api';
+import Editor from '@monaco-editor/react';
+import axios from 'axios';
 import '../App.css';
 import './QuestionDetails.css';
 
 export default function QuestionDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [language, setLanguage] = useState('cpp'); // Default language
+  const [language, setLanguage] = useState('cpp');
   const [code, setCode] = useState('');
   const [input, setInput] = useState('');
 
   const [output, setOutput] = useState('');
   const [outputError, setOutputError] = useState('');
 
+  const languageMap = {
+    cpp: 'cpp',
+    c: 'c',
+    python: 'python',
+    java: 'java'
+  };
+
+  // Auth check on mount
   useEffect(() => {
-    const fetchQuestion = async () => {
-      try {
-        const data = await getQuestionById(id);
-        setQuestion(data);
-      } catch (err) {
-        setError('Failed to load question.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchQuestion();
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/signin');
+      return;
+    }
+
+axios.get('http://localhost:8000/check-auth', {
+  headers: { Authorization: `Bearer ${token}` }
+})
+
+      .then(() => {
+        // Auth successful, load question
+        fetchQuestion();
+      })
+      .catch(() => {
+        localStorage.removeItem('token');
+        navigate('/signin');
+      });
   }, [id]);
+
+  const fetchQuestion = async () => {
+    try {
+      const data = await getQuestionById(id);
+      setQuestion(data);
+    } catch (err) {
+      setError('Failed to load question.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRun = async () => {
     setOutput('');
@@ -84,11 +113,12 @@ export default function QuestionDetail() {
         </div>
 
         <div className="code-editor-container">
-          <textarea
-            className="code-editor"
-            placeholder="Write your code here..."
+          <Editor
+            height="300px"
+            language={languageMap[language]}
+            theme="vs-dark"
             value={code}
-            onChange={(e) => setCode(e.target.value)}
+            onChange={(value) => setCode(value || '')}
           />
         </div>
 

@@ -19,15 +19,13 @@ router.post('/', authenicate, upload, uploadQuestion);
 router.put('/:id', authenicate, updateQuestion);
 router.delete('/:id', authenicate, deleteQuestion);
 
-// Get all questions (optionally include solved info if authenticated)
-router.get('/', authenicate, getQuestionList);
-
-// Get question by id
+// Get user-specific questions — this must come BEFORE /:id
 router.get('/my-questions', authenicate, getUserQuestions);
 
-// Get question by id — must come after
+// Get all questions (optionally include solved info)
+router.get('/', authenicate, getQuestionList);
+
+// Get question by ID — should always be last
 router.get('/:id', getQuestionDetails);
-
-
 
 export default router;
