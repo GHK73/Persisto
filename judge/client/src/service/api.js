@@ -1,12 +1,11 @@
 import axios from 'axios';
-const BASE_URL =
-  window.location.hostname === 'localhost'
-    ? 'http://localhost:8000'
-    : 'https://backend.gunuru.in';
+
+// Automatically use correct base URL from environment
+const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const api = axios.create({ baseURL: BASE_URL });
 
-// Attach token to headers
+// Attach token to headers (except for public routes)
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -30,7 +29,8 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Auth + User
+// ========== AUTH & USER ==========
+
 export const requestSignupOtp = (email) =>
   api.post('/signup/request-otp', { email });
 
@@ -63,7 +63,8 @@ export const updateProfilePicture = (handle, formData) =>
 export const getUserStats = (handle) =>
   api.get(`/users/${handle}/stats`).then((res) => res.data);
 
-// Questions
+// ========== QUESTIONS ==========
+
 export const getAllQuestions = () =>
   api.get('/questions').then((res) => res.data);
 
@@ -86,7 +87,8 @@ export const deleteQuestion = (id) =>
 export const getUserQuestions = () =>
   api.get('/questions/my-questions').then((res) => res.data);
 
-// Code Execution
+// ========== CODE EXECUTION ==========
+
 export const runCodeApi = (data) =>
   api.post('/code/run', data).then((res) => res.data);
 
