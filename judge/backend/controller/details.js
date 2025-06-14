@@ -100,23 +100,22 @@ export const signin = async (req, res) => {
     }
 
     const token = jwt.sign(
-  {
-    id: user.uniqueId,          
-    email: user.email,
-    handle: user.handle,
-    isAdmin: user.isAdmin,
-  },
-  JWT_SECRET,
-  { expiresIn: '2h' }
-);
-
+      {
+        id: user.uniqueId,
+        email: user.email,
+        handle: user.handle,
+        isAdmin: user.isAdmin,
+      },
+      JWT_SECRET,
+      { expiresIn: '2h' }
+    );
 
     res.status(200).json({
       message: 'Login successful!',
       token,
       handle: user.handle,
       email: user.email,
-      isAdmin: user.isAdmin, // Return in response
+      isAdmin: user.isAdmin,
     });
   } catch (error) {
     console.error('Error during signin:', error);
@@ -149,30 +148,7 @@ export const forgotPasswordRequestOtp = async (req, res) => {
     res.status(500).json({ message: 'Failed to send OTP' });
   }
 };
-export const resetPassword = async (req, res) => {
-  try {
-    const { email, newPassword } = req.body;
 
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    await User.findOneAndUpdate({ email }, { password: hashedPassword });
-
-    // Clean up used OTPs
-    await Otp.deleteMany({ email, purpose: 'forgot_password' });
-
-
-    res.status(200).json({ message: 'Password reset successful' });
-  } catch (error) {
-    console.error('Error resetting password:', error);
-    res.status(500).json({ message: 'Failed to reset password' });
-  }
-};
 export const forgotPasswordVerifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -191,6 +167,29 @@ export const forgotPasswordVerifyOtp = async (req, res) => {
   } catch (error) {
     console.error('Error verifying forgot-password OTP:', error);
     res.status(500).json({ message: 'Error verifying OTP' });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await User.findOneAndUpdate({ email }, { password: hashedPassword });
+
+    await Otp.deleteMany({ email, purpose: 'forgot_password' });
+
+    res.status(200).json({ message: 'Password reset successful' });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ message: 'Failed to reset password' });
   }
 };
 

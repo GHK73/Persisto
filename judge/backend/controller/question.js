@@ -109,7 +109,10 @@ export const deleteQuestion = async (req, res) => {
     const question = await Question.findOne({ questionId: id });
 
     if (!question) return res.status(404).json({ message: 'Question not found' });
-    if (question.uploadedBy.toString() !== userId) return res.status(403).json({ message: 'Unauthorized' });
+    if (!question.uploadedBy.equals(userId)) {
+  return res.status(403).json({ message: 'Unauthorized' });
+}
+
 
     await deleteS3Folder(`questions/${id}/`);
     await question.deleteOne();

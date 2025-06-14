@@ -1,4 +1,4 @@
-export  async function streamToString(stream) {
+export async function streamToString(stream) {
   const chunks = [];
   for await (const chunk of stream) {
     chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);

@@ -1,7 +1,8 @@
 import axios from 'axios';
-
-// ✅ Hardcoded live backend URL (change to http://backend.gunuru.in if SSL not setup)
-const BASE_URL = 'https://backend.gunuru.in';
+const BASE_URL =
+  window.location.hostname === 'localhost'
+    ? 'http://localhost:8000'
+    : 'https://backend.gunuru.in';
 
 const api = axios.create({ baseURL: BASE_URL });
 
