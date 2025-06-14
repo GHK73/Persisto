@@ -1,11 +1,9 @@
 import axios from 'axios';
 
-// Automatically use correct base URL from environment
 const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const api = axios.create({ baseURL: BASE_URL });
 
-// Attach token to headers (except for public routes)
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
