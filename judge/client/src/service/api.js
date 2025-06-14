@@ -1,11 +1,8 @@
 // src/service/api.js
-
 import axios from 'axios';
 
-// Automatically use correct base URL from environment
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-// ✅ Debug log to confirm the value during runtime
 console.log("🌐 Axios base URL:", BASE_URL);
 
 const api = axios.create({ baseURL: BASE_URL });
