@@ -7,7 +7,6 @@ console.log("🌐 Axios base URL:", BASE_URL);
 
 const api = axios.create({ baseURL: BASE_URL });
 
-// Attach token to headers (except for public routes)
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');

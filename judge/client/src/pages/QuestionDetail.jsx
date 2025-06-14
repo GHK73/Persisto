@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getQuestionById, runCodeApi, submitCodeApi } from '../service/api';
+import {
+  getQuestionById,
+  runCodeApi,
+  submitCodeApi,
+  checkAuth,
+} from '../service/api';
 import Editor from '@monaco-editor/react';
-import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import { FaCode } from 'react-icons/fa';
 import '../App.css';
@@ -11,6 +15,7 @@ import './QuestionDetails.css';
 export default function QuestionDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,10 +41,7 @@ export default function QuestionDetail() {
       return;
     }
 
-    axios
-      .get('http://localhost:8000/check-auth', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    checkAuth()
       .then(() => {
         fetchQuestion();
       })
@@ -79,7 +81,9 @@ export default function QuestionDetail() {
       if (result.passed) {
         setOutput('✅ All test cases passed!');
       } else {
-        setOutput(`❌ Some test cases failed: ${result.failedCases.join(', ')}`);
+        setOutput(
+          `❌ Some test cases failed: ${result.failedCases.join(', ')}`
+        );
       }
     } catch (err) {
       setOutputError(err.response?.data?.error || err.message);
@@ -94,13 +98,17 @@ export default function QuestionDetail() {
       <div className="left-pane">
         <h2 className="question-title">{question.title}</h2>
         <div className="question-description">
-          <ReactMarkdown>{question.description || 'No description available.'}</ReactMarkdown>
+          <ReactMarkdown>
+            {question.description || 'No description available.'}
+          </ReactMarkdown>
         </div>
       </div>
 
       <div className="right-pane">
         <div className="language-selector">
-          <label htmlFor="language-select" className="language-label">Language:</label>
+          <label htmlFor="language-select" className="language-label">
+            Language:
+          </label>
           <select
             id="language-select"
             value={language}
@@ -132,7 +140,9 @@ export default function QuestionDetail() {
         </div>
 
         <div className="input-section">
-          <label htmlFor="input-area" className="input-label">Input (stdin):</label>
+          <label htmlFor="input-area" className="input-label">
+            Input (stdin):
+          </label>
           <textarea
             id="input-area"
             className="input-box"
@@ -143,8 +153,12 @@ export default function QuestionDetail() {
         </div>
 
         <div className="button-group">
-          <button onClick={handleRun} className="btn-run">Run</button>
-          <button onClick={handleSubmit} className="btn-submit">Submit</button>
+          <button onClick={handleRun} className="btn-run">
+            Run
+          </button>
+          <button onClick={handleSubmit} className="btn-submit">
+            Submit
+          </button>
         </div>
 
         <div className="output-box">
