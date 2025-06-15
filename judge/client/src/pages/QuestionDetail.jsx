@@ -28,8 +28,8 @@ export default function QuestionDetail() {
   const [outputError, setOutputError] = useState('');
 
   const languageMap = {
-    cpp: 'cpp',
     c: 'c',
+    cpp: 'cpp',
     python: 'python',
     java: 'java',
   };
@@ -65,8 +65,16 @@ export default function QuestionDetail() {
   const handleRun = async () => {
     setOutput('');
     setOutputError('');
+
+    const selectedLang = languageMap[language] || 'cpp';
+    console.log('RUN CODE:', { code, language: selectedLang, input });
+
     try {
-      const result = await runCodeApi({ code, language, input });
+      const result = await runCodeApi({
+        code,
+        language: selectedLang,
+        input,
+      });
       setOutput(result.output);
     } catch (err) {
       setOutputError(err.response?.data?.error || err.message);
@@ -76,8 +84,16 @@ export default function QuestionDetail() {
   const handleSubmit = async () => {
     setOutput('');
     setOutputError('');
+
+    const selectedLang = languageMap[language] || 'cpp';
+    console.log('SUBMIT CODE:', { code, language: selectedLang, questionId: id });
+
     try {
-      const result = await submitCodeApi({ code, language, questionId: id });
+      const result = await submitCodeApi({
+        code,
+        language: selectedLang,
+        questionId: id,
+      });
       if (result.passed) {
         setOutput('✅ All test cases passed!');
       } else {
@@ -128,7 +144,7 @@ export default function QuestionDetail() {
           </div>
           <Editor
             height="100%"
-            language={languageMap[language]}
+            language={languageMap[language] || 'cpp'}
             theme="vs-dark"
             value={code}
             onChange={(value) => setCode(value || '')}
