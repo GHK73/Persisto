@@ -1,5 +1,5 @@
 import express from 'express';
-import { runCode, submitCode, getUniqueQuestionsSolved } from '../controller/codeController.js';
+import { runCode, submitCode, getUniqueQuestionsSolved, reviewCode } from '../controller/codeController.js';
 import { authenicate } from '../middleware/authenicate.js'; // Corrected spelling
 
 const router = express.Router();
@@ -12,5 +12,6 @@ router.post('/submit', authenicate, submitCode);
 
 // Route to get the count of unique questions solved by the user
 router.get('/unique-solved', authenicate, getUniqueQuestionsSolved);
+router.post('/review', authenicate, reviewCode);
 
 export default router;

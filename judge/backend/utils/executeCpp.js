@@ -2,81 +2,72 @@ import { exec, spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-// Define the directory to store compiled executables
 const outputDir = path.join(path.resolve(), 'outputs');
-
-// Ensure the output directory exists
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
 
 /**
- * Compiles and runs a C++ source file with provided input.
- * @param {string} filePath - Absolute path to the C++ source file.
- * @param {string} input - Input string to pass to the program.
- * @returns {Promise<string>} - Resolves with the program's output or rejects with error.
+ * Compiles C++ code once and returns a runner function for repeated input.
  */
-export const executeCpp = (filePath, input = '') => {
-  // Extract a unique job ID from the filename (UUID assumed)
+export const executeCpp = (filePath, _input = '', onlyBuild = false) => {
   const jobId = path.basename(filePath).split('.')[0];
-
-  // Define the path for the compiled executable
   const executablePath = path.join(outputDir, jobId);
 
   return new Promise((resolve, reject) => {
-    // Compile the C++ code using g++
-    exec(`g++ "${filePath}" -o "${executablePath}"`, (compileErr, stdout, compileStderr) => {
+    exec(`g++ "${filePath}" -o "${executablePath}"`, (compileErr, _, compileStderr) => {
       if (compileErr) {
-        console.error('❌ Compilation Error:', compileStderr);
         return reject(new Error(`Compilation Error: ${compileStderr.trim()}`));
       }
 
-      console.log(`✅ Compilation successful: ${filePath}`);
+      if (onlyBuild) {
+        // Return a reusable runner
+        const run = (input) => {
+          return new Promise((res, rej) => {
+            const child = spawn(executablePath);
 
-      // Spawn the compiled executable as a child process
-      const child = spawn(executablePath);
+            let output = '';
+            let errorOutput = '';
 
-      let programOutput = '';
-      let programError = '';
+            child.stdin.write(input);
+            child.stdin.end();
 
-      // Write input to the child process's stdin
-      console.log(`➡️ Sending input:\n${input}`);
-      child.stdin.write(input);
-      child.stdin.end();
+            child.stdout.on('data', (data) => (output += data.toString()));
+            child.stderr.on('data', (data) => (errorOutput += data.toString()));
 
-      // Collect stdout data
-      child.stdout.on('data', (data) => {
-        programOutput += data.toString();
-      });
+            child.on('close', (code) => {
+              if (code !== 0 || errorOutput.trim()) {
+                return rej(new Error(`Runtime Error: ${errorOutput.trim() || `Exited with code ${code}`}`));
+              }
+              res(output);
+            });
+          });
+        };
 
-      // Collect stderr data
-      child.stderr.on('data', (data) => {
-        programError += data.toString();
-      });
+        resolve({ run });
+      } else {
+        // Run immediately
+        const child = spawn(executablePath);
+        let output = '';
+        let errorOutput = '';
 
-      // Handle process exit
-      child.on('close', (code) => {
-        // Clean up the executable file
-        try {
-          fs.unlinkSync(executablePath);
-        } catch (err) {
-          console.warn(`⚠️ Failed to delete executable: ${executablePath}`, err.message);
-        }
+        child.stdin.write(_input);
+        child.stdin.end();
 
-        console.log(`🔄 Process exited with code: ${code}`);
-        console.log(`📤 Output:\n${programOutput.trim()}`);
+        child.stdout.on('data', (data) => (output += data.toString()));
+        child.stderr.on('data', (data) => (errorOutput += data.toString()));
 
-        if (programError.trim()) {
-          console.log(`⚠️ Error Output:\n${programError.trim()}`);
-        }
+        child.on('close', (code) => {
+          try {
+            fs.unlinkSync(executablePath);
+          } catch (_) {}
 
-        if (code !== 0 || programError.trim()) {
-          return reject(new Error(`Runtime Error: ${programError.trim() || `Exited with code ${code}`}`));
-        }
-
-        // Resolve with the captured program output
-        resolve(programOutput);
-      });
+          if (code !== 0 || errorOutput.trim()) {
+            return reject(new Error(`Runtime Error: ${errorOutput.trim() || `Exited with code ${code}`}`));
+          }
+          resolve(output);
+        });
+      }
     });
   });
 };

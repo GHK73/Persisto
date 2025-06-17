@@ -1,16 +1,31 @@
+// --- models/questions.js ---
 import mongoose from 'mongoose';
 
+// Schema for a single test case (hidden)
 const testCaseSchema = new mongoose.Schema({
   inputFileKey: {
     type: String,
-    required: true, // S3 key
+    required: true,
   },
   outputFileKey: {
     type: String,
-    required: true, // S3 key
+    required: true,
   }
-});
+}, { _id: false });
 
+// Schema for the sample test case (visible to user)
+const sampleTestCaseSchema = new mongoose.Schema({
+  inputFileKey: {
+    type: String,
+    required: true,
+  },
+  outputFileKey: {
+    type: String,
+    required: true,
+  }
+}, { _id: false });
+
+// Main Question schema
 const QuestionSchema = new mongoose.Schema({
   questionId: {
     type: String,
@@ -35,18 +50,24 @@ const QuestionSchema = new mongoose.Schema({
     type: [testCaseSchema],
     default: [],
   },
+  sampleTestCase: {
+  type: [sampleTestCaseSchema], 
+  required: false,
+  default: [],
+},
   tags: {
     type: [String],
     default: [],
   },
   descriptionFileKey: {
     type: String,
-    required: true, // Used to fetch from S3
+    required: true,
   },
   descriptionFile: {
-    type: String, // Original file name for reference
-    required: false,
+    type: String,
   }
+}, {
+  timestamps: true
 });
 
 export default mongoose.model('Question', QuestionSchema);

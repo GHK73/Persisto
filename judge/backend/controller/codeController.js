@@ -1,3 +1,5 @@
+// controllers/codeController.js
+
 import { generateFile } from '../utils/generateFile.js';
 import { executeCpp } from '../utils/executeCpp.js';
 import { executePython } from '../utils/executePython.js';
@@ -9,9 +11,10 @@ import Question from '../models/questions.js';
 import { getS3FileContent, uploadFileToS3 } from '../utils/s3Uploader.js';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs/promises';
+import genAI from '../utils/geminiClient.js';
 
 /**
- * Executes the code based on language
+ * Executes code using the appropriate executor based on language.
  */
 export const runCodeExecutor = async (language, filePath, input) => {
   const lang = language.trim().toLowerCase();
@@ -31,7 +34,7 @@ export const runCodeExecutor = async (language, filePath, input) => {
 };
 
 /**
- * Temporary run of code (no submission)
+ * Endpoint to temporarily run code without saving submission.
  */
 export const runCode = async (req, res) => {
   const { code, language, input } = req.body;
@@ -45,8 +48,7 @@ export const runCode = async (req, res) => {
     const filePath = await generateFile(lang, code);
 
     const output = await runCodeExecutor(lang, filePath, input);
-
-    await fs.unlink(filePath); // cleanup
+    await fs.unlink(filePath); // Clean up temp file
 
     return res.json({ success: true, output });
   } catch (err) {
@@ -56,7 +58,7 @@ export const runCode = async (req, res) => {
 };
 
 /**
- * Handles code submission for a specific question
+ * Handles code submission with test case evaluation.
  */
 export const submitCode = async (req, res) => {
   const userId = req.user?.id || req.user?.userId;
@@ -69,6 +71,8 @@ export const submitCode = async (req, res) => {
     return res.status(400).json({ success: false, error: 'Code and Question ID required' });
   }
 
+  let filePath = null;
+
   try {
     const lang = language.trim().toLowerCase();
     const supportedLangs = ['cpp', 'c++', 'c', 'python', 'py', 'java'];
@@ -76,21 +80,37 @@ export const submitCode = async (req, res) => {
       return res.status(400).json({ success: false, error: `Unsupported language: ${lang}` });
     }
 
-    const filePath = await generateFile(lang, code);
+    filePath = await generateFile(lang, code);
     const question = await Question.findOne({ questionId });
-
     if (!question) {
       return res.status(404).json({ success: false, error: 'Question not found' });
     }
 
     const failedCases = [];
 
+    let executor;
+    switch (lang) {
+      case 'cpp':
+      case 'c++':
+      case 'c':
+        executor = await executeCpp(filePath, null, true);
+        break;
+      case 'python':
+      case 'py':
+        executor = async (input) => await executePython(filePath, input);
+        break;
+      case 'java':
+        executor = await executeJava(filePath, null, true);
+        break;
+    }
+
     for (const tc of question.testCases) {
       try {
         const inputData = await getS3FileContent(tc.inputFileKey);
         const expectedOutput = await getS3FileContent(tc.outputFileKey);
 
-        const actualOutput = await runCodeExecutor(lang, filePath, inputData);
+        const actualOutput =
+          typeof executor === 'function' ? await executor(inputData) : await executor.run(inputData);
 
         const expected = expectedOutput?.replace(/\r\n/g, '\n').trim();
         const actual = actualOutput?.replace(/\r\n/g, '\n').trim();
@@ -105,7 +125,6 @@ export const submitCode = async (req, res) => {
     }
 
     const passed = failedCases.length === 0;
-
     const fileKey = `submissions/${userId}/${uuidv4()}.${lang}`;
     await uploadFileToS3(code, fileKey, 'text/plain');
 
@@ -128,12 +147,6 @@ export const submitCode = async (req, res) => {
       );
     }
 
-    try {
-      await fs.unlink(filePath);
-    } catch (err) {
-      console.warn('Temp file cleanup failed:', err.message);
-    }
-
     return res.json({
       success: true,
       passed,
@@ -143,11 +156,21 @@ export const submitCode = async (req, res) => {
   } catch (err) {
     console.error('submitCode error:', err);
     return res.status(500).json({ success: false, error: err.message });
+  } finally {
+    if (filePath) {
+      try {
+        await fs.unlink(filePath);
+      } catch (err) {
+        console.warn('Failed to clean up temp file:', filePath, err.message);
+      }
+    }
   }
 };
 
+
+
 /**
- * Get count of unique questions solved by user
+ * Returns number of unique solved questions by the user.
  */
 export const getUniqueQuestionsSolved = async (req, res) => {
   const userId = req.user?.id || req.user?.userId;
@@ -166,5 +189,52 @@ export const getUniqueQuestionsSolved = async (req, res) => {
     return res.json({ success: true, uniqueQuestionsSolved: count });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+/**
+ * AI-based code review using Gemini model.
+ */
+export const reviewCode = async (req, res) => {
+  const { code, language, questionTitle, questionDescription } = req.body;
+
+  if (!code || !language || !questionTitle || !questionDescription) {
+    return res.status(400).json({
+      success: false,
+      error: 'Code, language, question title, and description are required.',
+    });
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({
+  model: 'models/gemini-1.5-flash', 
+});
+
+
+    const prompt = `
+You are an expert coding mentor.
+Review the following ${language} code written to solve the given question.
+Offer constructive feedback on correctness, code quality, performance, edge cases, and best practices.
+Avoid restating the prompt. Keep review clear, structured, and concise.
+
+---
+🧾 Question Title: ${questionTitle}
+
+📋 Description:
+${questionDescription}
+
+---
+🧑‍💻 Code:
+${code}
+`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const review = response.text();
+
+    res.json({ success: true, review });
+  } catch (err) {
+    console.error('Gemini Review Error:', err);
+    res.status(500).json({ success: false, error: 'Failed to generate code review.' });
   }
 };

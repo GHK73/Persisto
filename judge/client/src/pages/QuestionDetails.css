@@ -1,4 +1,4 @@
-/* Whole layout background */
+/* ========== Global Layout ========== */
 .question-details-container {
   display: flex;
   height: 100vh;
@@ -6,16 +6,21 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  background-color: #f7fafc; /* Light pastel gray-blue */
+  background-color: #f7fafc;
 }
+
+/* ========== Question Description ========== */
 .question-description {
   font-size: 1rem;
   line-height: 1.6;
-  color: #334155;
+  color: #475569; /* Slate 600 */
   padding: 1rem;
   background-color: #f8fafc;
   border-radius: 8px;
   white-space: pre-wrap;
+  max-height: 70vh;
+  overflow-y: auto;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 .question-description h1,
@@ -44,39 +49,31 @@
   overflow-x: auto;
 }
 
-/* Left and Right panes */
-.left-pane, .right-pane {
+/* ========== Panes ========== */
+.left-pane,
+.right-pane {
   width: 50%;
   padding: 24px;
   overflow-y: auto;
-  background-color: #ffffff; /* Clean white cards */
+  background-color: #ffffff;
   border: none;
   box-sizing: border-box;
+  height: 100vh;
 }
 
-/* Left (question) */
 .question-title {
   font-size: 1.8rem;
-  color: #1e293b; /* Slate 800 */
+  color: #1e293b;
   margin-bottom: 10px;
 }
 
-.question-description {
-  white-space: pre-wrap;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #475569; /* Slate 600 */
-}
-
-/* Right (code section) */
+/* ========== Code Section ========== */
 .right-pane {
   display: flex;
   flex-direction: column;
   padding-left: 24px;
 }
 
-/* Language selector */
 .language-selector {
   display: flex;
   align-items: center;
@@ -97,16 +94,20 @@
   color: #0f172a;
 }
 
-/* Monaco Editor Container */
+/* ========== Monaco Editor ========== */
 .code-editor-container {
   flex-grow: 1;
   margin-bottom: 1rem;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
   overflow: hidden;
+  min-height: 300px;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Input Section */
+/* ========== Input ========== */
 .input-section {
   display: flex;
   flex-direction: column;
@@ -130,14 +131,15 @@
   color: #0f172a;
 }
 
-/* Buttons */
+/* ========== Buttons ========== */
 .button-group {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
 }
 
-.btn-run, .btn-submit {
+.btn-run,
+.btn-submit {
   padding: 10px 20px;
   font-weight: 600;
   border: none;
@@ -147,7 +149,7 @@
 }
 
 .btn-run {
-  background-color: #10b981; /* Emerald 500 */
+  background-color: #10b981;
   color: white;
 }
 
@@ -156,7 +158,7 @@
 }
 
 .btn-submit {
-  background-color: #3b82f6; /* Blue 500 */
+  background-color: #3b82f6;
   color: white;
 }
 
@@ -164,10 +166,10 @@
   background-color: #2563eb;
 }
 
-/* Output Display */
+/* ========== Output Display ========== */
 .output-box {
   min-height: 100px;
-  background-color: #f1f5f9; /* Slate-100 */
+  background-color: #f1f5f9;
   color: #0f172a;
   font-family: 'Courier New', Courier, monospace;
   padding: 1rem;
@@ -178,9 +180,9 @@
   border: 1px solid #cbd5e1;
 }
 
-/* Errors */
+/* ========== Error Display ========== */
 .output-error {
-  color: #dc2626; /* Red-600 */
+  color: #dc2626;
 }
 
 .error-message {
@@ -188,25 +190,131 @@
   font-weight: bold;
   text-align: center;
 }
-/* Scrollable description */
-.question-description {
-  max-height: 70vh;
-  overflow-y: auto;
+
+/* ========== AI Review Button ========== */
+.btn-review {
+  background-color: #6366f1;
+  color: white;
+  padding: 8px 14px;
+  margin-left: 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
 }
 
-/* Editor grows fully */
-.code-editor-container {
-  flex: 1;
-  min-height: 300px;
-  max-height: 60vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+/* ========== AI Review Box ========== */
+.review-box {
+  background-color: #eff6ff;
+  border: 1px solid #60a5fa;
+  padding: 16px;
+  margin-top: 16px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  color: #1e293b;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1rem;
+  line-height: 1.6;
+  overflow-y: auto;
+  max-height: 40vh;
+  box-shadow: 0 2px 6px rgba(96, 165, 250, 0.3);
+  position: relative;
 }
 
-/* Allow panes to scroll independently */
-.left-pane,
-.right-pane {
-  height: 100vh;
+.review-box::before {
+  content: "💡 AI Review";
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  background-color: #60a5fa;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.review-box h3,
+.review-box strong {
+  color: #1e293b;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.review-box code {
+  background-color: #e2e8f0;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+/* ========== Modal ========== */
+.review-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #eff6ff;
+  color: #1e293b;
+  border: 1px solid #60a5fa;
+  padding: 24px;
+  border-radius: 10px;
+  max-width: 800px;
+  max-height: 80vh;
   overflow-y: auto;
+  box-shadow: 0 4px 30px rgba(96, 165, 250, 0.3);
+  z-index: 9999;
+}
+
+.review-modal h3 {
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9998;
+}
+
+.close-button {
+  float: right;
+  font-size: 1.2rem;
+  background: none;
+  border: none;
+  color: #334155;
+  cursor: pointer;
+}
+
+/* ========== Sample Test Case Display ========== */
+.sample-test-case {
+  margin-top: 20px;
+  padding: 16px;
+  background-color: #f8fafc;
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  font-family: 'Courier New', Courier, monospace;
+  color: #1e293b;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.sample-test-case strong {
+  display: block;
+  margin-top: 1rem;
+  font-weight: bold;
+  color: #1e293b;
+}
+
+.sample-block {
+  margin-top: 10px;
+  background-color: #f1f5f9;
+  padding: 12px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  color: #0f172a;
+  font-size: 0.95rem;
 }

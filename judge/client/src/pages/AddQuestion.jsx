@@ -1,3 +1,5 @@
+// src/components/AddQuestion.jsx
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addQuestion } from '../service/api';
@@ -21,6 +23,7 @@ export default function AddQuestion() {
   const [tags, setTags] = useState([]);
   const [descriptionFile, setDescriptionFile] = useState(null);
   const [testCases, setTestCases] = useState([]);
+  const [sampleCases, setSampleCases] = useState([]);
 
   const suggestions = tagInput
     ? allTags.filter(
@@ -68,6 +71,16 @@ export default function AddQuestion() {
     setTestCases(updated);
   };
 
+  const handleAddSampleCase = () => {
+    setSampleCases([...sampleCases, { input: null, output: null }]);
+  };
+
+  const handleSampleCaseChange = (e, index, type) => {
+    const updated = [...sampleCases];
+    updated[index][type] = e.target.files[0];
+    setSampleCases(updated);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -80,24 +93,19 @@ export default function AddQuestion() {
     formData.append('title', title);
     formData.append('difficulty', difficulty.toLowerCase());
     formData.append('tags', JSON.stringify(tags));
+    formData.append('description', descriptionFile);
 
-    if (descriptionFile) {
-      formData.append('description', descriptionFile);
-    } else {
-      alert('Description file missing!');
-      return;
-    }
+    // Append sample input/output
+    sampleCases.forEach((sample) => {
+      if (sample.input) formData.append('sampleInput', sample.input);
+      if (sample.output) formData.append('sampleOutput', sample.output);
+    });
 
+    // Append real test case input/output
     testCases.forEach((test) => {
       if (test.input) formData.append('inputFiles', test.input);
       if (test.solution) formData.append('outputFiles', test.solution);
     });
-
-    // Debug logs
-    console.log('Submitting form data:');
-    for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
 
     try {
       await addQuestion(formData);
@@ -165,10 +173,7 @@ export default function AddQuestion() {
         <input
           type="file"
           accept=".txt"
-          onChange={(e) => {
-            console.log('Selected description file:', e.target.files[0]);
-            setDescriptionFile(e.target.files[0]);
-          }}
+          onChange={(e) => setDescriptionFile(e.target.files[0])}
           required
           className="input-file"
         />
@@ -184,22 +189,61 @@ export default function AddQuestion() {
           <option value="Hard">Hard</option>
         </select>
 
+        <div className="sample-io-section">
+          <label>Sample Input/Output Files:</label>
+          {sampleCases.map((sample, idx) => (
+            <div key={idx} className="test-case-pair">
+              <div>
+                <label>Sample Input {idx + 1}:</label>
+                <input
+                  type="file"
+                  accept=".txt"
+                  onChange={(e) => handleSampleCaseChange(e, idx, 'input')}
+                  className="input-file"
+                />
+              </div>
+              <div>
+                <label>Sample Output {idx + 1}:</label>
+                <input
+                  type="file"
+                  accept=".txt"
+                  onChange={(e) => handleSampleCaseChange(e, idx, 'output')}
+                  className="input-file"
+                />
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={handleAddSampleCase}
+            className="btn-add-test-case"
+          >
+            + Add Sample Pair
+          </button>
+        </div>
+
         <div className="test-case-section">
-          <label>Test Case Files (input + solution):</label>
+          <label>Test Case Files (input + output):</label>
           {testCases.map((test, idx) => (
             <div key={idx} className="test-case-pair">
-              <input
-                type="file"
-                accept=".txt"
-                onChange={(e) => handleTestCaseChange(e, idx, 'input')}
-                className="input-file"
-              />
-              <input
-                type="file"
-                accept=".txt"
-                onChange={(e) => handleTestCaseChange(e, idx, 'solution')}
-                className="input-file"
-              />
+              <div>
+                <label>Test Case Input {idx + 1}:</label>
+                <input
+                  type="file"
+                  accept=".txt"
+                  onChange={(e) => handleTestCaseChange(e, idx, 'input')}
+                  className="input-file"
+                />
+              </div>
+              <div>
+                <label>Test Case Output {idx + 1}:</label>
+                <input
+                  type="file"
+                  accept=".txt"
+                  onChange={(e) => handleTestCaseChange(e, idx, 'solution')}
+                  className="input-file"
+                />
+              </div>
             </div>
           ))}
           <button

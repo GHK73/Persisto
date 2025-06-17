@@ -1,4 +1,3 @@
-// src/service/api.js
 import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -7,6 +6,7 @@ console.log("🌐 Axios base URL:", BASE_URL);
 
 const api = axios.create({ baseURL: BASE_URL });
 
+// Add Authorization header to all private requests
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -38,9 +38,11 @@ export const requestSignupOtp = (email) =>
 export const verifySignupOtp = (email, otp) =>
   api.post('/signup/verify-otp', { email, otp });
 
-export const completeSignup = (data) => api.post('/signup/complete', data);
+export const completeSignup = (data) =>
+  api.post('/signup/complete', data);
 
-export const signinUser = (data) => api.post('/signin', data);
+export const signinUser = (data) =>
+  api.post('/signin', data);
 
 export const checkAuth = () =>
   api.get('/check-auth').then((res) => res.data.user);
@@ -95,3 +97,8 @@ export const runCodeApi = (data) =>
 
 export const submitCodeApi = (data) =>
   api.post('/code/submit', data).then((res) => res.data);
+
+// ========== AI CODE REVIEW ==========
+
+export const reviewCodeApi = (data) =>
+  api.post('/code/review', data).then((res) => res.data);

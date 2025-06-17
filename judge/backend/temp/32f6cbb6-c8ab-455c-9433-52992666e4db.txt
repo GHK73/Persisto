@@ -1,0 +1,8 @@
+Given two integers, return their sum.
+
+Input Format:
+- The first line contains an integer T, the number of test cases.
+- Each of the next T lines contains two integers separated by space.
+
+Output Format:
+- For each test case, output a single integer which is the sum of the two numbers.
