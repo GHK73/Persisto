@@ -1,7 +1,7 @@
 // --- controllers/question.js ---
 import fs from 'fs/promises';
 import Question from '../models/questions.js';
-import User from '../models/file.js'; // Consider renaming this to 'user.js'
+import User from '../models/file.js'; 
 import { v4 as uuidv4 } from 'uuid';
 import { uploadFileToS3 } from '../utils/s3Uploader.js';
 import s3Client from '../utils/s3Client.js';
@@ -17,7 +17,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 const BUCKET = process.env.S3_BUCKET_NAME;
 
-// --- Helpers ---
 const getDescriptionFromS3 = async (s3Key) => {
   const command = new GetObjectCommand({ Bucket: BUCKET, Key: s3Key });
   const response = await s3Client.send(command);
@@ -32,7 +31,6 @@ const deleteS3Folder = async (prefix) => {
   }
 };
 
-// --- Upload Question ---
 export const uploadQuestion = async (req, res) => {
   try {
     const userId = req.user?.userId;
@@ -119,7 +117,6 @@ export const uploadQuestion = async (req, res) => {
 };
 
 
-// --- Get Full Question ---
 export const getQuestionDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -165,7 +162,6 @@ export const getQuestionDetails = async (req, res) => {
 };
 
 
-// --- Delete Question ---
 export const deleteQuestion = async (req, res) => {
   try {
     const { id } = req.params;
@@ -185,7 +181,7 @@ export const deleteQuestion = async (req, res) => {
   }
 };
 
-// --- Update Question ---
+
 export const updateQuestion = async (req, res) => {
   try {
     const { id } = req.params;
@@ -258,7 +254,7 @@ export const updateQuestion = async (req, res) => {
   }
 };
 
-// --- Get All Questions Uploaded by User ---
+
 export const getUserQuestions = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -293,7 +289,7 @@ export const getUserQuestions = async (req, res) => {
   }
 };
 
-// --- Get All Questions with Solved Status ---
+
 export const getQuestionList = async (req, res) => {
   try {
     const userId = req.user?.userId;

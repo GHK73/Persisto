@@ -54,7 +54,7 @@ export default function QuestionDetail() {
     console.log('Fetched question:', data);
     setQuestion({
       ...data,
-      sampleTestCases: data.sampleTestCases || [], // ✅ Ensure it's part of `question` state
+      sampleTestCases: data.sampleTestCases || [], 
     });
   } catch {
     setError('❌ Failed to load question. Please try again later.');

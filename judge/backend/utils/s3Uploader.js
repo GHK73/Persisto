@@ -12,14 +12,11 @@ import dotenv from 'dotenv';
 dotenv.config();
 const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
-// Accepts file path (string), reads content and uploads
 export const uploadFileToS3 = async (filePathOrBuffer, key, contentType = 'text/plain') => {
   let fileContent;
   if (typeof filePathOrBuffer === 'string' && !filePathOrBuffer.includes('\n')) {
-    // Treat it as file path
     fileContent = await fs.readFile(filePathOrBuffer);
   } else {
-    // Treat it as direct content (buffer or code string)
     fileContent = filePathOrBuffer;
   }
 

@@ -15,7 +15,7 @@ router.get('/all-users', authenicate, isAdmin, async (req, res) => {
   }
 });
 
-// Grant admin rights to a user
+
 router.put('/make-admin/:handle', authenicate, isAdmin, async (req, res) => {
   try {
     const { handle } = req.params;

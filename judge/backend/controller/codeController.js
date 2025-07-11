@@ -13,9 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs/promises';
 import genAI from '../utils/geminiClient.js';
 
-/**
- * Executes code using the appropriate executor based on language.
- */
+
 export const runCodeExecutor = async (language, filePath, input) => {
   const lang = language.trim().toLowerCase();
   switch (lang) {
@@ -33,9 +31,7 @@ export const runCodeExecutor = async (language, filePath, input) => {
   }
 };
 
-/**
- * Endpoint to temporarily run code without saving submission.
- */
+
 export const runCode = async (req, res) => {
   const { code, language, input } = req.body;
 
@@ -57,9 +53,7 @@ export const runCode = async (req, res) => {
   }
 };
 
-/**
- * Handles code submission with test case evaluation.
- */
+
 export const submitCode = async (req, res) => {
   const userId = req.user?.id || req.user?.userId;
   if (!userId) {
@@ -169,9 +163,6 @@ export const submitCode = async (req, res) => {
 
 
 
-/**
- * Returns number of unique solved questions by the user.
- */
 export const getUniqueQuestionsSolved = async (req, res) => {
   const userId = req.user?.id || req.user?.userId;
   if (!userId) {
@@ -192,9 +183,7 @@ export const getUniqueQuestionsSolved = async (req, res) => {
   }
 };
 
-/**
- * AI-based code review using Gemini model.
- */
+
 export const reviewCode = async (req, res) => {
   const { code, language, questionTitle, questionDescription } = req.body;
 

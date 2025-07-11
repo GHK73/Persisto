@@ -7,9 +7,6 @@ if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
 
-/**
- * Compiles C++ code once and returns a runner function for repeated input.
- */
 export const executeCpp = (filePath, _input = '', onlyBuild = false) => {
   const jobId = path.basename(filePath).split('.')[0];
   const executablePath = path.join(outputDir, jobId);

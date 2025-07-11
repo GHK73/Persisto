@@ -4,7 +4,6 @@ import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 
-// Ensure the uploads directory exists
 const uploadDir = path.join('uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
@@ -12,7 +11,7 @@ if (!fs.existsSync(uploadDir)) {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Temporary local folder before upload to S3
+    cb(null, 'uploads/'); 
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = `${Date.now()}-${file.originalname}`;

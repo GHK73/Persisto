@@ -7,7 +7,7 @@ const OtpSchema = new mongoose.Schema({
   purpose: { type: String, enum: ['signup', 'forgot_password'], required: true },
 });
 
-OtpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // Auto-delete expired OTP docs
+OtpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); 
 
 const Otp = mongoose.model('Otp', OtpSchema);
 

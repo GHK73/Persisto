@@ -1,13 +1,7 @@
 import { spawn } from 'child_process';
 import path from 'path';
 
-/**
- * Returns a reusable runner function for executing a Python script with dynamic input.
- * Python is an interpreted language, so compilation isn't needed.
- *
- * @param {string} filePath - Absolute path to the Python file.
- * @returns {Promise<{ run: (input: string) => Promise<string> }>}
- */
+
 export const executePython = async (filePath) => {
   const run = (input = '') => {
     return new Promise((resolve, reject) => {

@@ -1,7 +1,6 @@
 // --- models/questions.js ---
 import mongoose from 'mongoose';
 
-// Schema for a single test case (hidden)
 const testCaseSchema = new mongoose.Schema({
   inputFileKey: {
     type: String,
@@ -13,7 +12,6 @@ const testCaseSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
-// Schema for the sample test case (visible to user)
 const sampleTestCaseSchema = new mongoose.Schema({
   inputFileKey: {
     type: String,
@@ -25,7 +23,7 @@ const sampleTestCaseSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
-// Main Question schema
+
 const QuestionSchema = new mongoose.Schema({
   questionId: {
     type: String,
