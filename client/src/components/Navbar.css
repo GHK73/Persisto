@@ -1,0 +1,47 @@
+.navbar {
+  background-color: #2563eb; /* Slightly deeper blue for richness */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 12px 32px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-logo {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.navbar-link {
+  font-size: 1rem;
+  margin-left: 24px;
+  color: #f1f5f9;
+  transition: all 0.25s ease;
+}
+
+.navbar-link:hover {
+  color: #e0f2fe;
+  text-shadow: 0 0 5px rgba(56, 189, 248, 0.4);
+}
+
+.navbar-button {
+  font-size: 1rem;
+  margin-left: 20px;
+  color: #f8fafc;
+  padding: 6px 12px;
+  background-color: transparent;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.navbar-button:hover {
+  color: #e0f2fe;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-email {
+  font-weight: 600;
+  color: #ffffff;
+}

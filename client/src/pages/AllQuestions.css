@@ -1,0 +1,100 @@
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.questions-container {
+  padding: 30px 60px;
+  background-color: #0f172a;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.questions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.questions-header h2 {
+  font-size: 2rem;
+  color: #fff;
+}
+
+/* Removed .add-problem-btn */
+
+.horizontal-question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.question-link {
+  text-decoration: none;
+  width: 100%;
+}
+
+.question-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1e293b;
+  padding: 16px 20px;
+  border-radius: 12px;
+  transition: transform 0.2s;
+  border: 1px solid #334155;
+  width: 100%;
+}
+
+.question-card:hover {
+  transform: translateY(-2px);
+}
+
+.question-left h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.tags {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background-color: #334155;
+  color: #f1f5f9;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.difficulty-badge {
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+
+.difficulty-badge.easy {
+  background-color: #22c55e;
+  color: #fff;
+}
+
+.difficulty-badge.medium {
+  background-color: #facc15;
+  color: #000;
+}
+
+.difficulty-badge.hard {
+  background-color: #ef4444;
+  color: #fff;
+}
