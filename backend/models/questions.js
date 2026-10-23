@@ -39,6 +39,18 @@ const QuestionSchema = new mongoose.Schema({
     enum: ['easy', 'medium', 'hard'],
     required: true,
   },
+  timeLimitSec: {
+    type: Number,
+    enum: [1, 2, 5],
+    default: 2,
+    required: true,
+  },
+  memoryLimitMb: {
+    type: Number,
+    enum: [128, 256, 512, 1024],
+    default: 256,
+    required: true,
+  },
   uploadedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -61,9 +73,6 @@ const QuestionSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  descriptionFile: {
-    type: String,
-  }
 }, {
   timestamps: true
 });

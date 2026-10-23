@@ -70,8 +70,16 @@ export default function QuestionDetail() {
         code,
         language: languageMap[language],
         input,
+        questionId: id,
       });
-      setOutput(result.output);
+      if (result.status === 'compile_error' || result.status === 'memory_limit_exceeded') {
+        setOutputError(result.error || result.status.replaceAll('_', ' '));
+      } else {
+        setOutput(result.output);
+        if (result.status !== 'accepted') {
+          setOutputError(`${result.status.replaceAll('_', ' ')}${result.error ? `: ${result.error}` : ''}`);
+        }
+      }
     } catch (err) {
       setOutputError(err.response?.data?.error || err.message);
     }
@@ -88,7 +96,10 @@ export default function QuestionDetail() {
       if (result.passed) {
         setOutput('✅ All test cases passed!');
       } else {
-        setOutput(`❌ Failed test cases: ${result.failedCases.join(', ')}`);
+        const detail = result.compileError
+          ? `\n${result.compileError}`
+          : result.failedCases.join(', ');
+        setOutput(`❌ ${(result.status || 'Submission failed').replaceAll('_', ' ')}: ${detail}`);
       }
     } catch (err) {
       setOutputError(err.response?.data?.error || err.message);
@@ -137,6 +148,11 @@ export default function QuestionDetail() {
     <div className="question-details-container">
       <div className="left-pane">
         <h2 className="question-title">{question.title}</h2>
+        <p className="question-limits">
+          Time limit: {question.timeLimitSec || 2}s per test case
+          {' · '}
+          Memory limit: {question.memoryLimitMb || 256} MB
+        </p>
         <div className="question-description">
           <ReactMarkdown>{question.description || 'No description available.'}</ReactMarkdown>
         </div>

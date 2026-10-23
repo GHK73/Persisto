@@ -19,11 +19,14 @@ export default function AddQuestion() {
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [difficulty, setDifficulty] = useState('Easy');
+  const [timeLimitSec, setTimeLimitSec] = useState(2);
+  const [memoryLimitMb, setMemoryLimitMb] = useState(256);
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState([]);
   const [descriptionFile, setDescriptionFile] = useState(null);
   const [testCases, setTestCases] = useState([]);
   const [sampleCases, setSampleCases] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   const suggestions = tagInput
     ? allTags.filter(
@@ -89,31 +92,34 @@ export default function AddQuestion() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('difficulty', difficulty.toLowerCase());
-    formData.append('tags', JSON.stringify(tags));
-    formData.append('description', descriptionFile);
+    if (testCases.some((test) => !test.input || !test.solution)) {
+      alert('Select both input and output files for every hidden test case.');
+      return;
+    }
+    if (sampleCases.some((sample) => !sample.input || !sample.output)) {
+      alert('Select both input and output files for every sample case.');
+      return;
+    }
 
-    // Append sample input/output
-    sampleCases.forEach((sample) => {
-      if (sample.input) formData.append('sampleInput', sample.input);
-      if (sample.output) formData.append('sampleOutput', sample.output);
-    });
-
-    // Append real test case input/output
-    testCases.forEach((test) => {
-      if (test.input) formData.append('inputFiles', test.input);
-      if (test.solution) formData.append('outputFiles', test.solution);
-    });
-
+    setUploading(true);
     try {
-      await addQuestion(formData);
+      await addQuestion({
+        title,
+        difficulty: difficulty.toLowerCase(),
+        timeLimitSec,
+        memoryLimitMb,
+        tags,
+        description: descriptionFile,
+        testCases: testCases.map(({ input, solution }) => ({ input, output: solution })),
+        sampleTestCases: sampleCases,
+      });
       alert('Question added successfully!');
       navigate('/questions');
     } catch (error) {
       console.error('API Error:', error.response?.data || error.message);
-      alert(error.response?.data?.message || 'Error adding question.');
+      alert(error.response?.data?.message || error.message || 'Error adding question.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -189,6 +195,29 @@ export default function AddQuestion() {
           <option value="Hard">Hard</option>
         </select>
 
+        <label>Time Limit (per test case):</label>
+        <select
+          value={timeLimitSec}
+          onChange={(e) => setTimeLimitSec(Number(e.target.value))}
+          className="input-select"
+        >
+          <option value={1}>1 second</option>
+          <option value={2}>2 seconds</option>
+          <option value={5}>5 seconds</option>
+        </select>
+
+        <label>Memory Limit (per submission):</label>
+        <select
+          value={memoryLimitMb}
+          onChange={(e) => setMemoryLimitMb(Number(e.target.value))}
+          className="input-select"
+        >
+          <option value={128}>128 MB</option>
+          <option value={256}>256 MB</option>
+          <option value={512}>512 MB</option>
+          <option value={1024}>1024 MB</option>
+        </select>
+
         <div className="sample-io-section">
           <label>Sample Input/Output Files:</label>
           {sampleCases.map((sample, idx) => (
@@ -255,8 +284,8 @@ export default function AddQuestion() {
           </button>
         </div>
 
-        <button type="submit" className="btn-submit-question">
-          Add Question
+        <button type="submit" className="btn-submit-question" disabled={uploading}>
+          {uploading ? 'Uploading files...' : 'Add Question'}
         </button>
       </form>
     </div>

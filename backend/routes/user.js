@@ -2,7 +2,12 @@ import express from 'express';
 import multer from 'multer';
 import User from '../models/file.js';
 import { v4 as uuidv4 } from 'uuid';
-import { uploadFileToS3, deleteFileFromS3, getSignedUrlForS3 } from '../utils/s3Uploader.js';
+import {
+  createS3Reference,
+  deleteFileFromS3,
+  getSignedUrlForS3,
+  uploadBufferToS3,
+} from '../utils/s3Uploader.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -23,14 +28,13 @@ router.post('/:handle/profile-pic', upload.single('profilePic'), async (req, res
       await deleteFileFromS3(user.profilePic);
     }
 
-    const ext = file.originalname.split('.').pop();
-    const key = `profile-pics/${uuidv4()}.${ext}`;
-    await uploadFileToS3(file.buffer, key, file.mimetype);
+    const key = `profile-pics/${uuidv4()}`;
+    await uploadBufferToS3(file.buffer, key, file.mimetype);
 
-    user.profilePic = key;
+    user.profilePic = createS3Reference(key);
     await user.save();
 
-    const signedUrl = await getSignedUrlForS3(key);
+    const signedUrl = await getSignedUrlForS3(user.profilePic);
     res.status(200).json({ profilePic: signedUrl });
   } catch (err) {
     console.error('S3 upload error:', err);

@@ -74,12 +74,79 @@ export const getAllQuestions = () =>
 export const getQuestionById = (id) =>
   api.get(`/questions/${id}`).then((res) => res.data);
 
-export const addQuestion = (formData) =>
-  api
-    .post('/questions', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    .then((res) => res.data);
+const getFileDescriptor = (file) => ({
+  size: file.size,
+  contentType: file.type || 'application/octet-stream',
+});
+
+const uploadToS3 = async (file, upload) => {
+  const response = await fetch(upload.url, {
+    method: 'PUT',
+    headers: { 'Content-Type': upload.contentType },
+    body: file,
+  });
+  if (!response.ok) {
+    throw new Error(`S3 upload failed with status ${response.status}`);
+  }
+};
+
+export const addQuestion = async ({
+  title,
+  difficulty,
+  timeLimitSec,
+  memoryLimitMb,
+  tags,
+  description,
+  testCases,
+  sampleTestCases,
+}) => {
+  const manifest = {
+    title,
+    difficulty,
+    timeLimitSec,
+    memoryLimitMb,
+    tags,
+    description: getFileDescriptor(description),
+    testCases: testCases.map(({ input, output }) => ({
+      input: getFileDescriptor(input),
+      output: getFileDescriptor(output),
+    })),
+    sampleTestCases: sampleTestCases.map(({ input, output }) => ({
+      input: getFileDescriptor(input),
+      output: getFileDescriptor(output),
+    })),
+  };
+
+  const { data: session } = await api.post('/questions/uploads', manifest);
+  const files = [
+    [description, session.uploads.description],
+    ...testCases.flatMap(({ input, output }, index) => [
+      [input, session.uploads.testCases[index].input],
+      [output, session.uploads.testCases[index].output],
+    ]),
+    ...sampleTestCases.flatMap(({ input, output }, index) => [
+      [input, session.uploads.sampleTestCases[index].input],
+      [output, session.uploads.sampleTestCases[index].output],
+    ]),
+  ];
+
+  try {
+    for (let index = 0; index < files.length; index += 4) {
+      await Promise.all(files.slice(index, index + 4).map(([file, upload]) =>
+        uploadToS3(file, upload)
+      ));
+    }
+    const { data } = await api.post(`/questions/uploads/${session.uploadId}/complete`);
+    return data;
+  } catch (error) {
+    try {
+      await api.delete(`/questions/uploads/${session.uploadId}`);
+    } catch (cleanupError) {
+      console.error('Could not clean up failed question upload:', cleanupError);
+    }
+    throw error;
+  }
+};
 
 export const updateQuestion = (id, formData) =>
   api.put(`/questions/${id}`, formData).then((res) => res.data);

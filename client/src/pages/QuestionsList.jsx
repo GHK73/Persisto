@@ -66,6 +66,7 @@ const QuestionList = () => {
               <div className="question-info">
                 <span className="question-link">{q.title}</span>
                 <span className="difficulty-tag">{q.difficulty}</span>
+                <span>{q.timeLimitSec || 2}s · {q.memoryLimitMb || 256} MB</span>
               </div>
               <div className="button-group">
                 <button onClick={() => handleUpdate(q.questionId)} className="btn-edit">

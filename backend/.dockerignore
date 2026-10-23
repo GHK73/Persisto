@@ -6,3 +6,8 @@ logs
 .gitignore
 Dockerfile
 .dockerignore
+.env
+.env.*
+codes
+outputs
+uploads

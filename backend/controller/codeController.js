@@ -1,55 +1,77 @@
 // controllers/codeController.js
 
-import { generateFile } from '../utils/generateFile.js';
-import { executeCpp } from '../utils/executeCpp.js';
-import { executePython } from '../utils/executePython.js';
-import { executeJava } from '../utils/executeJava.js';
+import { runInSandbox } from '../utils/runInSandbox.js';
 import Submission from '../models/submission.js';
 import mongoose from 'mongoose';
 import User from '../models/file.js';
 import Question from '../models/questions.js';
-import { getS3FileContent, uploadFileToS3 } from '../utils/s3Uploader.js';
+import {
+  createS3Reference,
+  getS3FileContent,
+  uploadBufferToS3,
+} from '../utils/s3Uploader.js';
 import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs/promises';
 import genAI from '../utils/geminiClient.js';
 
-
-export const runCodeExecutor = async (language, filePath, input) => {
-  const lang = language.trim().toLowerCase();
-  switch (lang) {
-    case 'cpp':
-    case 'c++':
-    case 'c':
-      return await executeCpp(filePath, input);
-    case 'python':
-    case 'py':
-      return await executePython(filePath, input);
-    case 'java':
-      return await executeJava(filePath, input);
-    default:
-      throw new Error(`Unsupported language: ${lang}`);
-  }
-};
-
-
 export const runCode = async (req, res) => {
-  const { code, language, input } = req.body;
+  const { code, language, input = '', questionId } = req.body;
 
-  if (!code || !language) {
-    return res.status(400).json({ success: false, error: 'Code and language are required.' });
+  if (
+    typeof code !== 'string' ||
+    !code ||
+    Buffer.byteLength(code, 'utf8') > 256 * 1024 ||
+    typeof language !== 'string'
+  ) {
+    return res.status(400).json({
+      success: false,
+      error: 'Code and language are required; code must not exceed 256 KB.',
+    });
   }
 
   try {
     const lang = language.trim().toLowerCase();
-    const filePath = await generateFile(lang, code);
+    if (!['cpp', 'c++', 'c', 'python', 'py', 'java'].includes(lang)) {
+      return res.status(400).json({ success: false, error: `Unsupported language: ${lang}` });
+    }
+    if (typeof input !== 'string' || Buffer.byteLength(input, 'utf8') > 1024 * 1024) {
+      return res.status(400).json({ success: false, error: 'Input must be text no larger than 1 MB.' });
+    }
+    const question = questionId
+      ? await Question.findOne({ questionId }).select('timeLimitSec memoryLimitMb')
+      : null;
+    if (questionId && !question) {
+      return res.status(404).json({ success: false, error: 'Question not found' });
+    }
+    const result = await runInSandbox({
+      code,
+      language: lang,
+      inputs: [typeof input === 'string' ? input : ''],
+      timeLimitMs: (question?.timeLimitSec || 2) * 1000,
+      memoryLimitMb: question?.memoryLimitMb || 256,
+    });
 
-    const output = await runCodeExecutor(lang, filePath, input);
-    await fs.unlink(filePath); // Clean up temp file
-
-    return res.json({ success: true, output });
+    if (result.status === 'compile_error') {
+      return res.json({ success: false, status: result.status, error: result.error });
+    }
+    if (result.status === 'memory_limit_exceeded') {
+      return res.json({
+        success: false,
+        status: result.status,
+        error: result.error || 'Memory limit exceeded',
+      });
+    }
+    const runResult = result.results?.[0];
+    if (!runResult) throw new Error('Sandbox returned no execution result');
+    return res.json({
+      success: runResult.status === 'accepted',
+      status: runResult.status,
+      output: runResult.output,
+      error: runResult.error,
+      timeMs: runResult.timeMs,
+    });
   } catch (err) {
     console.error('runCode error:', err);
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(503).json({ success: false, error: err.message });
   }
 };
 
@@ -61,11 +83,9 @@ export const submitCode = async (req, res) => {
   }
 
   const { code, language = 'cpp', questionId } = req.body;
-  if (!code || !questionId) {
+  if (typeof code !== 'string' || !code || Buffer.byteLength(code, 'utf8') > 256 * 1024 || !questionId) {
     return res.status(400).json({ success: false, error: 'Code and Question ID required' });
   }
-
-  let filePath = null;
 
   try {
     const lang = language.trim().toLowerCase();
@@ -74,7 +94,6 @@ export const submitCode = async (req, res) => {
       return res.status(400).json({ success: false, error: `Unsupported language: ${lang}` });
     }
 
-    filePath = await generateFile(lang, code);
     const question = await Question.findOne({ questionId });
     if (!question) {
       return res.status(404).json({ success: false, error: 'Question not found' });
@@ -82,53 +101,60 @@ export const submitCode = async (req, res) => {
 
     const failedCases = [];
 
-    let executor;
-    switch (lang) {
-      case 'cpp':
-      case 'c++':
-      case 'c':
-        executor = await executeCpp(filePath, null, true);
-        break;
-      case 'python':
-      case 'py':
-        executor = async (input) => await executePython(filePath, input);
-        break;
-      case 'java':
-        executor = await executeJava(filePath, null, true);
-        break;
+    if (question.testCases.length === 0) {
+      return res.status(400).json({ success: false, error: 'Question has no judge test cases' });
     }
+    const testData = await Promise.all(question.testCases.map(async (testCase) => {
+      const [input, expected] = await Promise.all([
+        getS3FileContent(testCase.inputFileKey),
+        getS3FileContent(testCase.outputFileKey),
+      ]);
+      return { input, expected: expected.replace(/\r\n/g, '\n').trim() };
+    }));
+    const execution = await runInSandbox({
+      code,
+      language: lang,
+      inputs: testData.map(({ input }) => input),
+      timeLimitMs: question.timeLimitSec * 1000,
+      memoryLimitMb: question.memoryLimitMb,
+    });
 
-    for (const tc of question.testCases) {
-      try {
-        const inputData = await getS3FileContent(tc.inputFileKey);
-        const expectedOutput = await getS3FileContent(tc.outputFileKey);
-
-        const actualOutput =
-          typeof executor === 'function' ? await executor(inputData) : await executor.run(inputData);
-
-        const expected = expectedOutput?.replace(/\r\n/g, '\n').trim();
-        const actual = actualOutput?.replace(/\r\n/g, '\n').trim();
-
-        if (expected !== actual) {
-          failedCases.push(tc.inputFileKey);
+    let status = 'accepted';
+    if (execution.status === 'compile_error') {
+      status = 'compile_error';
+      failedCases.push('compilation');
+    } else if (execution.status === 'memory_limit_exceeded') {
+      status = 'memory_limit_exceeded';
+      failedCases.push('memory-limit');
+    } else if (execution.status !== 'completed' || execution.results?.length !== testData.length) {
+      throw new Error('Sandbox returned an incomplete execution result');
+    } else {
+      for (const [index, result] of execution.results.entries()) {
+        const expected = testData[index].expected;
+        const actual = result.output?.replace(/\r\n/g, '\n').trim();
+        if (result.status !== 'accepted') {
+          failedCases.push(`test-case-${index + 1}`);
+          if (status === 'accepted') status = result.status === 'output_limit_exceeded'
+            ? 'output_limit_exceeded'
+            : result.status;
+        } else if (expected !== actual) {
+          failedCases.push(`test-case-${index + 1}`);
+          if (status === 'accepted') status = 'wrong_answer';
         }
-      } catch (err) {
-        console.error(`Test case ${tc.inputFileKey} failed:`, err.message);
-        failedCases.push(tc.inputFileKey);
       }
     }
-
-    const passed = failedCases.length === 0;
+    const passed = status === 'accepted';
     const fileKey = `submissions/${userId}/${uuidv4()}.${lang}`;
-    await uploadFileToS3(code, fileKey, 'text/plain');
+    await uploadBufferToS3(Buffer.from(code, 'utf8'), fileKey, 'text/plain');
 
     const submission = new Submission({
       userId,
       questionId,
       language: lang,
       code,
-      codeFileKey: fileKey,
+      codeFileKey: createS3Reference(fileKey),
       passed,
+      status,
       failedCases,
       timestamp: new Date(),
     });
@@ -144,20 +170,14 @@ export const submitCode = async (req, res) => {
     return res.json({
       success: true,
       passed,
+      status,
       message: passed ? '✅ All test cases passed!' : '❌ Some test cases failed.',
       failedCases,
+      compileError: execution.status === 'compile_error' ? execution.error : undefined,
     });
   } catch (err) {
     console.error('submitCode error:', err);
-    return res.status(500).json({ success: false, error: err.message });
-  } finally {
-    if (filePath) {
-      try {
-        await fs.unlink(filePath);
-      } catch (err) {
-        console.warn('Failed to clean up temp file:', filePath, err.message);
-      }
-    }
+    return res.status(503).json({ success: false, error: err.message });
   }
 };
 

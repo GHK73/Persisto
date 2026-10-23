@@ -1,7 +1,8 @@
 import express from 'express';
-import upload from '../middleware/uploadMiddleware.js';
 import {
-  uploadQuestion,
+  cancelQuestionUpload,
+  completeQuestionUpload,
+  createQuestionUpload,
   updateQuestion,
   deleteQuestion,
   getQuestionList,
@@ -9,10 +10,13 @@ import {
   getUserQuestions
 } from '../controller/question.js';
 import { authenicate } from '../middleware/authenicate.js';
+import { isAdmin } from '../middleware/isAdmin.js';
 
 const router = express.Router();
 
-router.post('/', authenicate, upload, uploadQuestion);
+router.post('/uploads', authenicate, isAdmin, createQuestionUpload);
+router.post('/uploads/:uploadId/complete', authenicate, isAdmin, completeQuestionUpload);
+router.delete('/uploads/:uploadId', authenicate, isAdmin, cancelQuestionUpload);
 
 router.put('/:id', authenicate, updateQuestion);
 router.delete('/:id', authenicate, deleteQuestion);

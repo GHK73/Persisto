@@ -11,6 +11,7 @@ import QuestionsList from './pages/QuestionsList.jsx';
 import QuestionDetail from './pages/QuestionDetail.jsx';
 import AddQuestion from './pages/AddQuestion.jsx';
 import AllQuestions from './pages/AllQuestions.jsx';
+import UpdateQuestion from './pages/UpdateQuestion.jsx';
 
 import Navbar from './components/Navbar.jsx';
 import './App.css';
@@ -29,7 +30,7 @@ function App() {
       if (token && storedUser && storedUser !== 'undefined') {
         try {
           setUser(JSON.parse(storedUser));
-        } catch (err) {
+        } catch {
           console.error("Failed to parse stored user:", storedUser);
           localStorage.removeItem('user'); // remove corrupted user data
         }
@@ -135,6 +136,22 @@ function App() {
           }
         />
         <Route path="/questions/:id" element={<QuestionDetail />} />
+        <Route
+          path="/update-question/:id"
+          element={
+            user ? (
+              user.isAdmin ? (
+                <UpdateQuestion />
+              ) : (
+                <div className="text-center py-20 text-red-400 font-semibold">
+                  Access Denied
+                </div>
+              )
+            ) : (
+              <Signin onSigninSuccess={setUser} />
+            )
+          }
+        />
         <Route path="/all-questions" element={<AllQuestions user={user} />} />
       </Routes>
     </div>
