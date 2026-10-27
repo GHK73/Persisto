@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 MAX_CODE_BYTES = 256 * 1024
 MAX_INPUT_BYTES = 1024 * 1024
@@ -37,7 +38,7 @@ def terminate_process(process):
     process.wait()
 
 
-def run_process(command, input_data, timeout_sec, output_limit=MAX_OUTPUT_BYTES):
+def run_process(command, input_data, timeout_sec, output_limit=MAX_OUTPUT_BYTES, cwd=None):
     process = subprocess.Popen(
         command,
         stdin=subprocess.PIPE,
@@ -45,6 +46,7 @@ def run_process(command, input_data, timeout_sec, output_limit=MAX_OUTPUT_BYTES)
         stderr=subprocess.PIPE,
         start_new_session=True,
         bufsize=0,
+        cwd=cwd,
     )
     selector = selectors.DefaultSelector()
     stdout = bytearray()
@@ -131,6 +133,7 @@ def main():
         inputs = payload["inputs"]
         time_limit_ms = payload["timeLimitMs"]
         memory_limit_mb = payload["memoryLimitMb"]
+        max_parallel_tests = payload["maxParallelTests"]
         if (
             language not in {"c", "cpp", "c++", "python", "py", "java"}
             or not isinstance(code, str)
@@ -141,6 +144,8 @@ def main():
             or sum(len(item.encode("utf-8")) for item in inputs) > 4 * 1024 * 1024
             or time_limit_ms not in {1000, 2000, 5000}
             or memory_limit_mb not in {128, 256, 512, 1024}
+            or type(max_parallel_tests) is not int
+            or not 1 <= max_parallel_tests <= MAX_TEST_CASES
         ):
             raise ValueError("Invalid execution request")
     except Exception as error:
@@ -191,16 +196,26 @@ def main():
             }))
             return 0
 
-        results = []
-        for input_data in inputs:
-            oom_kills_before = read_oom_kills()
-            result = run_process(
+        def run_test_case(case):
+            index, input_data = case
+            case_workdir = os.path.join(workdir, f"case-{index}")
+            os.mkdir(case_workdir)
+            return run_process(
                 command,
                 input_data.encode("utf-8"),
                 time_limit_ms / 1000,
+                cwd=case_workdir,
             )
+
+        oom_kills_before = read_oom_kills()
+        with ThreadPoolExecutor(max_workers=min(max_parallel_tests, len(inputs))) as executor:
+            case_results = list(executor.map(run_test_case, enumerate(inputs)))
+        oom_kills_during_tests = read_oom_kills() > oom_kills_before
+
+        results = []
+        for result in case_results:
             status = "accepted"
-            if read_oom_kills() > oom_kills_before:
+            if oom_kills_during_tests and result["returncode"] == -signal.SIGKILL:
                 status = "memory_limit_exceeded"
             elif result["timed_out"]:
                 status = "time_limit_exceeded"

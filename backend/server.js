@@ -9,6 +9,7 @@ import questionRoutes from './routes/questionRoutes.js';
 import codeRoutes from './routes/code.js';
 import adminRoutes from './routes/adminRoutes.js';
 import userRoutes from './routes/user.js';
+import { connectRedis } from './middleware/codeExecutionRateLimit.js';
 
 dotenv.config();
 
@@ -25,6 +26,17 @@ app.use('/code', codeRoutes);
 app.use('/', authRoutes);              
 
 DBConnection();
+
+connectRedis()
+  .then(() => {
+    console.log('Redis connection established.');
+  })
+  .catch((error) => {
+    console.error(
+      'Redis connection failed; code execution will remain unavailable until Redis reconnects:',
+      error.message
+    );
+  });
 
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);

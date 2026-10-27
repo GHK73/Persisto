@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "start:runner": "node sandbox/runnerServer.js"
+    "start:runner": "node sandbox/runnerServer.js",
+    "check:redis": "node scripts/checkRedis.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.826.0",
@@ -25,6 +26,7 @@
     "multer": "^2.0.0",
     "nodemailer": "^7.0.3",
     "openai": "^5.5.0",
+    "redis": "^4.7.1",
     "uuid": "^11.1.0"
   }
 }

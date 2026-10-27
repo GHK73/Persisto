@@ -56,16 +56,22 @@ function Dashboard({ user }) {
 
   if (!user) {
     return (
-      <div className="form-container">
+      <div className="dashboard-page">
         <div className="dashboard-box">Loading user info...</div>
       </div>
     );
   }
 
   return (
-    <div className="form-container">
-      <div className="dashboard-box">
-        <h1>User Dashboard</h1>
+    <main className="dashboard-page">
+      <section className="dashboard-box">
+        <div className="dashboard-heading">
+          <div>
+            <p className="dashboard-eyebrow">Your account</p>
+            <h1>Dashboard</h1>
+            <p className="dashboard-intro">Manage your profile and keep an eye on your practice.</p>
+          </div>
+        </div>
 
         <div className="user-info">
           <div className="profile-pic-wrapper">
@@ -81,8 +87,7 @@ function Dashboard({ user }) {
               />
             ) : (
               <div className="no-pic-placeholder">
-                <FaUserCircle size={80} color="#94a3b8" />
-                <p>No Profile Picture</p>
+                <FaUserCircle size={74} />
               </div>
             )}
 
@@ -99,19 +104,28 @@ function Dashboard({ user }) {
                 aria-label="Upload Profile Picture"
               />
             </label>
+            <p className="profile-hint">Add a profile photo</p>
           </div>
 
           <div className="user-details">
-            <p><strong>Name:</strong> {user.name}</p>
-            <p><strong>Handle:</strong> {user.handle}</p>
-            <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>Questions Done:</strong> {questionsDone}</p>
+            <div className="profile-name">
+              <h2>{user.name || user.handle || 'Welcome'}</h2>
+              <span className="profile-handle">@{user.handle || 'member'}</span>
+            </div>
+            <div className="account-row">
+              <span>Email address</span>
+              <strong>{user.email}</strong>
+            </div>
+            <div className="account-stat">
+              <span className="stat-number">{questionsDone}</span>
+              <span className="stat-label">Problems completed</span>
+            </div>
           </div>
         </div>
 
-        {error && <p className="error">{error}</p>}
-      </div>
-    </div>
+        {error && <p className="error dashboard-error" role="alert">{error}</p>}
+      </section>
+    </main>
   );
 }
 

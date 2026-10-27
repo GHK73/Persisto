@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { checkAuth, getQuestionById, updateQuestion } from '../service/api.js';
+import './AddQuestion.css';
 
 const defaultForm = {
   title: '',
@@ -70,59 +71,69 @@ export default function UpdateQuestion() {
     }
   };
 
-  if (!questionData) return <div>Loading...</div>;
+  if (!questionData) return <div className="app-loading">Loading question...</div>;
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>Edit Question</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Title:</label><br />
+    <main className="add-question-container">
+      <h1 className="add-question-heading">Edit problem</h1>
+      <form onSubmit={handleSubmit} className="add-question-form">
+        <div className="question-field">
+          <label htmlFor="question-title">Title</label>
           <input
             type="text"
             name="title"
+            id="question-title"
             value={formData.title}
             onChange={handleChange}
             required
+            className="input-text"
           />
         </div>
-        <div>
-          <label>Description:</label><br />
+        <div className="question-field">
+          <label htmlFor="question-description">Description</label>
           <textarea
             name="description"
+            id="question-description"
             value={formData.description}
             onChange={handleChange}
             rows={6}
             required
+            className="input-text"
           />
         </div>
-        <div>
-          <label>Tags (comma-separated):</label><br />
+        <div className="question-field">
+          <label htmlFor="question-tags">Tags (comma-separated)</label>
           <input
             type="text"
             name="tags"
+            id="question-tags"
             value={formData.tags}
             onChange={handleChange}
+            className="input-text"
           />
         </div>
-        <div>
-          <label>Time Limit (per test case):</label><br />
+        <div className="question-field">
+          <label htmlFor="question-time-limit">Time limit (per test case)</label>
           <select
             name="timeLimitSec"
+            id="question-time-limit"
             value={formData.timeLimitSec}
             onChange={handleChange}
+            className="input-select"
           >
             <option value={1}>1 second</option>
             <option value={2}>2 seconds</option>
             <option value={5}>5 seconds</option>
           </select>
         </div>
-        <div>
-          <label>Memory Limit (per submission):</label><br />
+        <div className="question-field">
+          <label htmlFor="question-memory-limit">Memory limit (per submission)</label>
           <select
             name="memoryLimitMb"
+            id="question-memory-limit"
             value={formData.memoryLimitMb}
             onChange={handleChange}
+            className="input-select"
           >
             <option value={128}>128 MB</option>
             <option value={256}>256 MB</option>
@@ -130,10 +141,10 @@ export default function UpdateQuestion() {
             <option value={1024}>1024 MB</option>
           </select>
         </div>
-        <button type="submit" disabled={saving}>
+        <button type="submit" className="btn-submit-question" disabled={saving}>
           {saving ? 'Saving...' : 'Update Question'}
         </button>
       </form>
-    </div>
+    </main>
   );
 }

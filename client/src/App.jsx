@@ -19,7 +19,6 @@ import './App.css';
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [showLinks, setShowLinks] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,10 +53,6 @@ function App() {
 
     checkUser();
 
-    if (!localStorage.getItem('welcomeLinksShown')) {
-      setShowLinks(true);
-      localStorage.setItem('welcomeLinksShown', 'true');
-    }
   }, []);
 
   const logout = () => {
@@ -69,44 +64,77 @@ function App() {
 
   if (authLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-900 text-white text-xl font-semibold">
-        Checking Authentication...
-      </div>
+      <div className="app-loading" role="status">Preparing your workspace...</div>
     );
   }
 
   return (
-    <div className="app-wrapper min-h-screen bg-slate-900 text-slate-100">
+    <div className="app-wrapper">
       <Navbar user={user} logout={logout} />
 
       <Routes>
         <Route
           path="/"
           element={
-            <div className="flex items-center justify-center min-h-[calc(100vh-70px)] px-4">
-              <div className="welcome-card bg-slate-800 p-10 rounded-xl shadow-lg text-center max-w-xl w-full border border-slate-600">
-                <h1 className="text-3xl font-bold mb-4">
-                  {user ? `Welcome, ${user.handle || user.email}!` : 'Welcome to Online Judge!'}
-                </h1>
-                <p className="text-slate-300">
-                  {user ? (
-                    'Click your handle in the top right to visit your dashboard.'
-                  ) : showLinks ? (
-                    <>
-                      Please{' '}
-                      <Link to="/signin" className="text-sky-400 underline">
-                        Sign In
-                      </Link>{' '}
-                      or{' '}
-                      <Link to="/signup" className="text-sky-400 underline">
-                        Sign Up
-                      </Link>{' '}
-                      to continue.
-                    </>
-                  ) : null}
-                </p>
+            <main className="home-page">
+              <div className="home-content">
+                <section className="home-copy">
+                  <p className="eyebrow">The coding practice platform</p>
+                  <h1 className="home-title">
+                    {user ? (
+                      <>Good to see you, <span>{user.handle || user.email}.</span></>
+                    ) : (
+                      <>Think clearly. <span>Code confidently.</span></>
+                    )}
+                  </h1>
+                  <p className="home-description">
+                    Build problem-solving skills one challenge at a time. Practice with a focused editor,
+                    run your code, and track your progress as you grow.
+                  </p>
+                  <div className="home-actions">
+                    <Link to="/all-questions" className="home-action home-action-primary">
+                      Explore problems
+                    </Link>
+                    {user ? (
+                      <Link to="/dashboard" className="home-action home-action-secondary">
+                        View your dashboard
+                      </Link>
+                    ) : (
+                      <Link to="/signup" className="home-action home-action-secondary">
+                        Create a free account
+                      </Link>
+                    )}
+                  </div>
+                  <div className="home-proof" aria-label="Platform features">
+                    <span>Curated challenges</span>
+                    <span>Instant code runs</span>
+                    <span>Progress that matters</span>
+                  </div>
+                </section>
+
+                <aside className="code-preview" aria-label="Example coding workspace">
+                  <div className="preview-topbar">
+                    <div className="preview-dots" aria-hidden="true"><i /><i /><i /></div>
+                    <span>two-sum.cpp</span>
+                    <span className="preview-language">C++</span>
+                  </div>
+                  <pre className="preview-code" aria-hidden="true">
+                    <span className="code-line-number">01</span><span className="code-keyword">int</span> twoSum(vector&lt;<span className="code-keyword">int</span>&gt;&amp; nums, <span className="code-keyword">int</span> target) {'{'}{'\n'}
+                    <span className="code-line-number">02</span>  unordered_map&lt;<span className="code-keyword">int</span>, <span className="code-keyword">int</span>&gt; seen;{'\n'}
+                    <span className="code-line-number">03</span>  <span className="code-keyword">for</span> (<span className="code-keyword">int</span> i = 0; i &lt; nums.size(); i++) {'{'}{'\n'}
+                    <span className="code-line-number">04</span>    <span className="code-keyword">int</span> match = target - nums[i];{'\n'}
+                    <span className="code-line-number">05</span>    <span className="code-keyword">if</span> (seen.count(match)) {'{'}{'\n'}
+                    <span className="code-line-number">06</span>      <span className="code-keyword">return</span> seen[match];{'\n'}
+                    <span className="code-line-number">07</span>    {'}'}{'\n'}
+                    <span className="code-line-number">08</span>    seen[nums[i]] = i;{'\n'}
+                    <span className="code-line-number">09</span>  {'}'}{'\n'}
+                    <span className="code-line-number">10</span>  <span className="code-keyword">return</span> -1;{'\n'}
+                    <span className="code-line-number">11</span>{'}'}
+                  </pre>
+                  <div className="preview-status"><span className="status-dot" /> Ready to run</div>
+                </aside>
               </div>
-            </div>
+            </main>
           }
         />
 
@@ -125,8 +153,8 @@ function App() {
               user.isAdmin ? (
                 <AddQuestion />
               ) : (
-                <div className="text-center py-20 text-red-400 font-semibold">
-                  <h2 className="text-2xl mb-2">Access Denied 🚫</h2>
+                <div className="access-denied">
+                  <h2>Admin access required</h2>
                   <p>You do not have permission to view this page.</p>
                 </div>
               )
@@ -143,8 +171,9 @@ function App() {
               user.isAdmin ? (
                 <UpdateQuestion />
               ) : (
-                <div className="text-center py-20 text-red-400 font-semibold">
-                  Access Denied
+                <div className="access-denied">
+                  <h2>Admin access required</h2>
+                  <p>You do not have permission to view this page.</p>
                 </div>
               )
             ) : (

@@ -1,40 +1,51 @@
-// components/Navbar.jsx
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import './Navbar.css'; // Import the CSS file for styling
+import { Link, NavLink } from 'react-router-dom';
+import './Navbar.css';
 
 export default function Navbar({ user, logout }) {
-  const navigate = useNavigate();
-
   return (
     <nav className="navbar">
       <div className="navbar-content">
         <div className="navbar-left">
-          <Link to="/" className="navbar-logo">Online Judge</Link>
-          <Link to="/all-questions" className="navbar-link">Questions</Link>
+          <Link to="/" className="navbar-logo" aria-label="Persisto home">
+            <span className="brand-mark" aria-hidden="true">&lt;/&gt;</span>
+            <span>Persisto</span>
+          </Link>
+          <NavLink
+            to="/all-questions"
+            className={({ isActive }) => `navbar-link${isActive ? ' active' : ''}`}
+          >
+            Problems
+          </NavLink>
         </div>
         <div className="navbar-right">
           {user ? (
             <>
               {user.isAdmin && (
                 <>
-                  <Link to="/questions" className="navbar-link">Contribution</Link>
-                  <Link to="/questions/add" className="navbar-link">Add Question</Link>
+                  <NavLink to="/questions" className={({ isActive }) => `navbar-link${isActive ? ' active' : ''}`}>
+                    Contributions
+                  </NavLink>
+                  <NavLink to="/questions/add" className={({ isActive }) => `navbar-link${isActive ? ' active' : ''}`}>
+                    Add problem
+                  </NavLink>
                 </>
               )}
-              <button
-                className="navbar-button user-email"
-                onClick={() => navigate('/dashboard')}
-                title="Go to Dashboard"
+              <Link
+                className="navbar-user"
+                to="/dashboard"
+                title="Go to dashboard"
               >
-                {user.handle || user.email}
-              </button>
-              <button className="navbar-button" onClick={logout}>Logout</button>
+                <span className="user-avatar" aria-hidden="true">
+                  {(user.handle || user.email || 'U').charAt(0).toUpperCase()}
+                </span>
+                <span className="user-name">{user.handle || user.email}</span>
+              </Link>
+              <button className="navbar-button" onClick={logout}>Sign out</button>
             </>
           ) : (
             <>
-              <Link to="/signup" className="navbar-link">Sign Up</Link>
-              <Link to="/signin" className="navbar-link">Sign In</Link>
+              <Link to="/signin" className="navbar-link">Sign in</Link>
+              <Link to="/signup" className="navbar-signup">Get started</Link>
             </>
           )}
         </div>

@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
+import { availableParallelism } from 'node:os';
 
 const PORT = Number(process.env.RUNNER_PORT || 8090);
 const RUNNER_TOKEN = process.env.RUNNER_SHARED_TOKEN;
@@ -15,6 +16,7 @@ const ALLOWED_TIME_LIMITS_MS = new Set([1000, 2000, 5000]);
 const ALLOWED_MEMORY_LIMITS_MB = new Set([128, 256, 512, 1024]);
 const COMPILE_TIMEOUT_MS = 20_000;
 const MAX_CONCURRENT_JOBS = 2;
+const TEST_CASE_PARALLELISM = Math.max(1, Math.floor(availableParallelism() / 2));
 let activeJobs = 0;
 
 if (!RUNNER_TOKEN) {
@@ -62,6 +64,7 @@ const validatePayload = (payload) => {
 
 const runDocker = (payload) => new Promise((resolve, reject) => {
   const memory = `${payload.memoryLimitMb}m`;
+  const parallelism = Math.min(TEST_CASE_PARALLELISM, payload.inputs.length);
   const containerName = `persisto-job-${randomUUID()}`;
   const args = [
     'run',
@@ -71,7 +74,7 @@ const runDocker = (payload) => new Promise((resolve, reject) => {
     '--network=none',
     '--memory', memory,
     '--memory-swap', memory,
-    '--cpus=1',
+    '--cpus', String(parallelism),
     '--pids-limit=64',
     '--read-only',
     '--tmpfs', '/tmp:rw,exec,nosuid,nodev,size=256m',
@@ -154,7 +157,7 @@ const runDocker = (payload) => new Promise((resolve, reject) => {
     }
   });
 
-  child.stdin.end(JSON.stringify(payload));
+  child.stdin.end(JSON.stringify({ ...payload, maxParallelTests: parallelism }));
 });
 
 const server = createServer(async (request, response) => {

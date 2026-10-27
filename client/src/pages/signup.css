@@ -1,95 +1,118 @@
 .form-container {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 20px;
-  background-color: #eef4fb; /* Soft blue background for modern contrast */
+  display: grid;
+  min-height: calc(100vh - 76px);
+  place-items: center;
+  padding: 48px 20px;
 }
 
 .form-box {
-  background: #fff;
-  padding: 32px 28px;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  width: 100%;
-  max-width: 400px;
-  box-sizing: border-box;
+  width: min(100%, 450px);
+  padding: clamp(26px, 5vw, 42px);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .form-box h2 {
-  font-weight: 700;
-  font-size: 28px;
-  margin-bottom: 24px;
-  text-align: center;
-  color: #333;
+  margin: 0 0 10px;
+  color: var(--color-ink);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: -0.045em;
+  text-align: left;
 }
 
 .form-box input {
+  display: block;
   width: 100%;
-  padding: 14px 16px;
-  margin-bottom: 18px;
-  border: 1.8px solid #ddd;
+  min-height: 47px;
+  margin: 0 0 14px;
+  padding: 11px 13px;
+  border: 1px solid #d9e1e3;
   border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 0.3s ease;
+  background: #fff;
+  color: var(--color-ink);
+  font-size: 0.92rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.form-box input::placeholder {
+  color: #8a979d;
 }
 
 .form-box input:focus {
-  border-color: #6c63ff;
+  border-color: #64a89d;
   outline: none;
-  box-shadow: 0 0 6px #6c63ff66;
+  box-shadow: 0 0 0 3px rgba(8, 127, 117, 0.1);
 }
 
-.btn-otp {
+.form-box input:disabled {
+  background: #f2f5f5;
+  color: #65747a;
+}
+
+.form-box .btn-otp,
+.form-box .btn-submit,
+.form-box > button:not(.btn-submit):not(.btn-otp) {
+  display: inline-flex;
   width: 100%;
-  padding: 14px 0;
-  background-color: #1976d2; /* Blue background for OTP button */
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 14px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--color-primary);
   color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-bottom: 18px; /* Space below OTP button */
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: background-color 150ms ease;
 }
 
-.btn-otp:hover {
-  background-color: #115293; /* Darker blue on hover */
+.form-box .btn-otp {
+  border-color: #cbdcda;
+  background: #f2f8f6;
+  color: var(--color-primary-dark);
 }
 
-.btn-submit {
-  width: 100%;
-  padding: 14px 0;
-  background-color: #0052cc; /* Deeper blue for higher contrast */
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+.form-box .btn-otp:hover {
+  background: #e6f2ee;
 }
 
-.btn-submit:hover {
-  background-color: #003d99; /* Darker blue on hover */
+.form-box .btn-submit:hover,
+.form-box > button:not(.btn-submit):not(.btn-otp):hover {
+  background: var(--color-primary-dark);
 }
 
 .form-footer {
-  margin-top: 20px;
+  margin: 19px 0 0;
+  color: var(--color-muted);
+  font-size: 0.86rem;
   text-align: center;
-  color: #222222;
-  font-size: 15px;
 }
 
 .form-footer a {
-  color: #0052cc;
-  font-weight: 600;
+  color: var(--color-primary-dark);
+  font-weight: 700;
   text-decoration: none;
 }
 
 .form-footer a:hover {
-  color: #003d99;
   text-decoration: underline;
+}
+
+.form-box .error,
+.form-box .success {
+  margin: 3px 0 12px;
+  font-size: 0.87rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    min-height: calc(100vh - 124px);
+    padding: 30px 16px;
+  }
 }

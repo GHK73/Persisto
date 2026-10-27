@@ -178,15 +178,20 @@ The API process does not compile or execute user code. It reads hidden test
 inputs/expected outputs from S3 and sends only source and inputs to a separate
 runner service. The runner starts an ephemeral Docker container with no network,
 no host filesystem mounts, a read-only root filesystem, a non-root user, dropped
-Linux capabilities, a PID cap, one CPU, a memory cap, and a bounded writable
-temporary filesystem. The API host's files and database credentials are not
-mounted or passed into the execution container.
+Linux capabilities, a PID cap, a memory cap, and a bounded writable temporary
+filesystem. The API host's files and database credentials are not mounted or
+passed into the execution container.
 
 The trusted container harness compiles once per request and runs each input in
-a separate child process. Runtime is limited independently for each test case;
-compilation has a separate hard 15-second ceiling. Output is capped at 1 MB per
-test case. The runner has a hard 5-second maximum per test case regardless of
-question configuration.
+a separate child process. It runs up to half the runner host's available CPU
+parallelism (at least one test at a time), capped by the number of inputs. Each
+test case has a separate working directory, results remain in input order, and
+the Docker CPU quota matches the number of concurrent cases. Test processes
+share the submission's Docker memory cap, so concurrent memory-heavy cases may
+reach that cap sooner than sequential cases. Runtime is limited independently
+for each test case; compilation has a separate hard 15-second ceiling. Output
+is capped at 1 MB per test case. The runner has a hard 5-second maximum per
+test case regardless of question configuration.
 
 Question documents store `timeLimitSec` (`1`, `2`, or `5`; default `2`) and
 `memoryLimitMb` (`128`, `256`, `512`, or `1024`; default `256`). Time applies
@@ -199,6 +204,15 @@ limit exceeded, runtime errors, and output-limit exceeded as distinct statuses.
 The API stores the status and failed test-case numbers in MongoDB; it never
 returns hidden test data. Passing submissions add the question ID to the
 user's solved list.
+
+The authenticated `POST /code/run` and `POST /code/submit` endpoints share a
+Redis-backed limit of 5 execution requests per user per minute. The limit uses
+a fixed 60-second window. Configure `REDIS_URL` for the backend; if Redis is
+unavailable or unconfigured, execution requests fail with HTTP 503 rather than
+bypassing the limit. Requests beyond the limit receive HTTP 429 and a
+`Retry-After` header. The API attempts to connect to Redis at startup. Check
+the connection independently from the `backend` directory with
+`npm run check:redis`; the command sends `PING` and expects `PONG`.
 
 `POST /code/run` may include `questionId` to use that question's limits. The
 question screen includes its ID when requesting a custom-input run.
@@ -291,6 +305,7 @@ Never put backend credentials in the Vite client environment.
 | `S3_BUCKET_NAME` | Required for S3 | Bucket used for question files, profile pictures, and submitted code; access verified with a read-only `HeadBucket` check on 2026-10-23. |
 | `RUNNER_URL` | Required for code execution | Private base URL for the isolated Docker runner service. |
 | `RUNNER_SHARED_TOKEN` | Required for code execution | Strong shared secret used only between backend API and runner. |
+| `REDIS_URL` | Required for code execution | Private Redis connection URL used for shared per-user execution rate limits. |
 | `GEMINI_API_KEY` | Required for AI review | Google Generative AI API key. |
 
 Load these in the backend runtime only. Use a secret manager for production.
@@ -309,8 +324,9 @@ them.
 - The sample Docker build/deployment commands target Linux Docker hosts. Local
   Windows development requires Docker Desktop with Linux containers and the
   execution image built locally.
-- Restrict API CORS to the deployed client origin, add rate-limits, and review
-  authorization consistently across protected endpoints.
+- Restrict API CORS to the deployed client origin, consider rate-limits for
+  other expensive endpoints, and review authorization consistently across
+  protected endpoints.
 - Decide whether anonymous visitors should browse questions: the client exposes
   `/all-questions`, but the API's `GET /questions` route currently requires
   authentication.

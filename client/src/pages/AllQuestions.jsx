@@ -29,7 +29,11 @@ export default function AllQuestions() {
   return (
     <div className="questions-container">
       <div className="questions-header">
-        <h2>Your Problems</h2>
+        <div>
+          <p className="questions-eyebrow">Practice library</p>
+          <h1>Explore problems</h1>
+          <p className="questions-intro">Choose a challenge, write a solution, and learn by doing.</p>
+        </div>
       </div>
 
       {loading && <p>Loading questions...</p>}
@@ -40,7 +44,7 @@ export default function AllQuestions() {
 
       <div className="horizontal-question-list">
         {questions.map((q) => (
-          <Link to={`/questions/${q.questionId}`} key={q.questionId} className="question-link">
+          <Link to={`/questions/${q.questionId}`} key={q.questionId} className="question-card-link">
             <div className="question-card">
               <div className="question-left">
                 <h3>{q.title}</h3>
@@ -50,8 +54,8 @@ export default function AllQuestions() {
                   ))}
                 </div>
               </div>
-              <div className={`difficulty-badge ${q.difficulty.toLowerCase()}`}>
-                {q.difficulty}
+              <div className={`difficulty-badge ${(q.difficulty || 'unknown').toLowerCase()}`}>
+                {q.difficulty || 'Unrated'}
               </div>
             </div>
           </Link>
